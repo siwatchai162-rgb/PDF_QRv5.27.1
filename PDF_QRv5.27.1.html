@@ -1,0 +1,2230 @@
+<!-- patch: comments per date+line 2025-09-18T02:11:23.165743 -->
+<!-- multi-upload by line + autolink @ 2025-09-18T01:57:40.081115 -->
+<!-- Patch: row-click to send Cut-file to search — 2025-09-17T09:57:12 -->
+<!-- add send-from-Cut button; safe minimal patch @ 2025-09-17T09:49:54 -->
+<!-- Rebuilt UPPER variant — 2025-09-17T08:13:22 -->
+<!-- Patched: restore search→QR21→QR24→search focus flow + single-page print — 2025-09-17T06:12:00 -->
+<!-- One-page print variant generated 2025-09-17T05:59:13 -->
+<!-- Final Build v4 — 2025-09-17T02:16:55 -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<script>const WEB_APP_URL = 'PUT_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';</script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>PDF + QR System (v5.27.1 — Final Build)</title>
+<style>
+  :root{
+    --bg:#f6f7fb;--card:#fff;--ink:#101828;--muted:#667085;--pri:#2563eb;
+    --ok:#15803d;--warn:#b45309;--bad:#dc2626;--bd:#e5e7eb;--soft:#f8fafc;
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);margin:0;color:var(--ink)}
+  .wrap{max-width:1480px;margin:24px auto;padding:0 16px}
+  h1{margin:0 0 8px}
+  .status{font-size:12px;color:var(--muted)}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:0 8px 26px rgba(0,0,0,.06);padding:16px}
+  .title{font-weight:700;margin:0 0 10px;display:flex;gap:8px;align-items:center}
+
+  .grid-main{display:grid;grid-template-columns:clamp(420px, 34%, 620px) 1fr 1fr;gap:16px;align-items:start}
+
+  input,button,textarea{font:inherit}
+  label{font-size:13px;color:#475467;display:block;margin:0 0 6px}
+  input,textarea{padding:10px 12px;border:1px solid #cfd5e1;border-radius:10px;outline:0;background:#fff}
+  textarea{min-height:96px;resize:vertical}
+  input:focus,textarea:focus{border-color:#6b9cff;box-shadow:0 0 0 3px rgba(107,156,255,.25)}
+  input:disabled{background:#f3f4f6;color:#94a3b8;cursor:not-allowed}
+  .btn{padding:10px 12px;border:0;border-radius:10px;background:var(--pri);color:#fff;cursor:pointer}
+  .btn.gray{background:#475569}
+  .btn.red{background:#dc2626}
+  .btn.ghost{background:#fff;color:#334155;border:1px solid var(--bd)}
+  .row{display:grid;grid-template-columns:1fr 220px;gap:10px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .qrbox{background:#fff;border:2px dashed var(--bd);border-radius:14px;padding:10px;display:inline-block}
+  canvas{background:#fff;border-radius:10px}
+  .filters{border:2px dashed var(--bd);border-radius:14px;background:#f8fafc;padding:16px;min-height:68px;color:#475467;display:grid;gap:12px;align-content:start}
+  .filters .rowfit{display:grid;grid-template-columns:240px 1fr;gap:12px;align-items:end}
+  .list{display:grid;gap:10px;max-height:60vh;overflow:auto;padding-right:4px}
+  .hidden{display:none !important}
+  .item{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--bd);border-radius:14px;background:#fff}
+  .rowflex{display:flex;gap:12px;align-items:center}
+  .meta{font-size:12px;color:#64748b}
+  .qr-mini{border:1px dashed var(--bd);border-radius:12px;padding:6px}
+  .modal{position:fixed;inset:0;display:none;flex-direction:column;background:rgba(0,0,0,.75);z-index:50}
+  .modal.show{display:flex}
+  .modal .top{background:#fff;padding:10px 14px;border-bottom:1px solid var(--bd)}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .grow{flex:1}
+  .modal iframe{width:100%;height:100%;border:0;background:#f3f4f6}
+  .seg{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:#fff}
+  .seg button{border:0;padding:8px 10px;background:transparent;cursor:pointer;font-size:12px;color:#334155}
+  .seg button+button{border-left:1px solid var(--bd)}
+  .seg .active{background:var(--pri);color:#fff}
+
+  .searchShort{flex:1 1 420px; min-width:260px; max-width:100%}
+
+  .tabs{display:flex;gap:8px;align-items:center;margin:8px 0 16px}
+  .tab{padding:8px 12px;border:1px solid var(--bd);border-radius:999px;background:#fff;cursor:pointer;color:#334155}
+  .tab.active{background:var(--pri);border-color:var(--pri);color:#fff}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#334155;font-size:12px;border:1px solid var(--bd)}
+  .pill.ok{background:#dcfce7;border-color:#86efac;color:#14532d}
+  .pill.bad{background:#fee2e2;border-color:#fecaca;color:#7f1d1d}
+  .pill.warn{background:#fff7ed;border-color:#fed7aa;color:#7c2d12}
+  .pill.neutral{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+  .badge{font-size:11px;border:1px solid var(--bd);border-radius:999px;padding:2px 8px;background:#f8fafc;color:#334155}
+
+  .uploader{display:grid;gap:12px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+  th,td{font-size:13px;border-bottom:1px solid var(--bd);padding:8px 10px;text-align:left}
+  tbody tr:hover{background:#f8fafc;cursor:pointer}
+  .hint{font-size:12px;color:#64748b}
+  .passmodal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.65);z-index:60}
+  .passmodal.show{display:grid}
+  .passcard{background:#fff;border-radius:14px;border:1px solid var(--bd);padding:16px;min-width:320px;max-width:92vw;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+  #mirrorBox .mirror-scroller{max-height:420px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+  #mirrorBox table{width:100%;border-collapse:collapse;font-size:13.5px}
+  #mirrorBox thead th{position:sticky;top:0;background:#f8fafc;z-index:1;text-align:left;padding:10px 12px;border-bottom:1px solid #e5e7eb;box-shadow: inset 0 -1px 0 #e5e7eb}
+  #mirrorBox tbody td{padding:10px 12px;border-bottom:1px solid #eef1f6;white-space:nowrap}
+  #mirrorBox tbody tr:nth-child(2n){background:#fbfdff}
+  #mirrorBox tbody tr:hover{background:#eef6ff}
+  .marker{font-weight:700}
+  .marker.done{color:#15803d}
+  .marker.todo{color:#b45309}
+  .marker.none{color:#64748b}
+
+  .note{font-size:12px;color:#475467}
+
+  @media (max-width: 1280px){
+    .grid-main{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width: 980px){
+    .grid-main{grid-template-columns:1fr;}
+    .row{grid-template-columns:1fr}
+    .filters .rowfit{grid-template-columns:1fr}
+    .searchShort{flex:1 1 auto; min-width:240px; width:auto}
+  }
+#search{text-transform:uppercase}
+
+/* mini button in Cut-file column */
+.sendSearch{font-size:11px; padding:2px 6px; border:1px solid #cbd5e1; background:#fff; border-radius:8px; cursor:pointer; margin-left:6px; color:#334155}
+.sendSearch:hover{background:#f1f5f9}
+
+/* row-click to search */
+.mirrorRowClick{cursor:pointer}
+.mirrorRowClick:hover{background:#f8fafc}
+</style>
+<script>
+  const CFG = { autoBuild:true, autoClear:true, qrWidth:120, offsetY:60 };
+  const state={maker:false,pdf:false,listMode:'one', requireScan21:false, page:'main', cmtFilter: localStorage.getItem('pdfqr_cmt_filter')||'all'};
+
+  // === Storage (persist daily uploads + last upload session + comments) ===
+  const STORE_KEY = 'pdfqr_upload_store_v1';
+  const LAST_KEY  = 'pdfqr_last_upload_v1';
+  const COMMENT_KEY = 'pdfqr_row_comments_v1';
+  let uploadStore = { byDate: {} };  // { 'YYYY-MM-DD': { rows: [...], name:'file.csv', ts:123456789 } }
+  let comments = {}; // { 'YYYY-MM-DD|primaryId': {done:boolean, note:string, ts:number, id:string, date:string} }
+
+  function saveStore(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(uploadStore)); }catch(e){} }
+  function loadStore(){
+    try{ const t = localStorage.getItem(STORE_KEY); if(t){ const obj = JSON.parse(t); if(obj && obj.byDate) uploadStore = obj; } }catch(e){}
+  }
+  function saveComments(){ try{ localStorage.setItem(COMMENT_KEY, JSON.stringify(comments)); }catch(e){} }
+  function loadComments(){ try{ const t=localStorage.getItem(COMMENT_KEY); if(t){ const obj=JSON.parse(t); if(obj) comments=obj; } }catch(e){} }
+
+  function putIntoStore(iso, rows, name, line){
+  if(!iso || !Array.isArray(rows) || rows.length===0) return false;
+  const key = iso + '|' + (line||'');
+  uploadStore.byDate[key] = { rows: rows, name: name||'', ts: Date.now(), line: (line||'') };
+  saveStore();
+  renderStoreList();
+  return true;
+}
+
+  function removeFromStore(iso){ if(uploadStore.byDate[iso]){ delete uploadStore.byDate[iso]; saveStore(); renderStoreList(); } }
+
+  // Auto-save / restore "last upload session"
+  function saveLastUpload(name){
+    try{
+      const rows = (Array.isArray(uploadRows)? uploadRows.slice(0,2000) : []);
+      const payload = JSON.stringify({ name: name||'', rows: rows, ts: Date.now() });
+      localStorage.setItem(LAST_KEY, payload);
+      $('lastBadge').textContent = 'บันทึกล่าสุดเมื่อ ' + new Date().toLocaleString('th-TH');
+    }catch(e){ console.warn('saveLastUpload failed', e); $('lastBadge').textContent='บันทึกล่าสุด: ผิดพลาด'; }
+  }
+  function clearLastUpload(){
+    try{ localStorage.removeItem(LAST_KEY); }catch(e){};
+    uploadRows=[]; lastFileName=''; $('upTable').innerHTML=''; $('upStatus').textContent='ล้างข้อมูลล่าสุดแล้ว'; $('lastBadge').textContent='ไม่มีข้อมูลกู้คืนล่าสุด';
+  }
+  function loadLastUpload(){
+    try{
+      const t = localStorage.getItem(LAST_KEY);
+      if(!t) { $('lastBadge').textContent='ไม่มีข้อมูลกู้คืนล่าสุด'; return; }
+      const obj = JSON.parse(t);
+      if(obj && Array.isArray(obj.rows)){
+        uploadRows = obj.rows;
+        lastFileName = obj.name||'';
+        $('upStatus').textContent = 'กู้คืนจากครั้งก่อน • ไฟล์: ' + (lastFileName||'(ไม่ระบุ)') + ' • ' + uploadRows.length + ' แถว';
+        $('lastBadge').textContent = 'กู้คืนอัตโนมัติเมื่อ ' + new Date(obj.ts||Date.now()).toLocaleString('th-TH');
+        renderUploadTable();
+      }else{
+        $('lastBadge').textContent='ไม่มีข้อมูลกู้คืนล่าสุด';
+      }
+    }catch(e){
+      console.warn('loadLastUpload failed', e);
+      $('lastBadge').textContent='ไม่มีข้อมูลกู้คืนล่าสุด';
+    }
+  }
+
+  // === Helpers ===
+  const $=id=>document.getElementById(id);
+  const fmtSize=n=>{if(n===0)return'0 B';const k=1024,u=['B','KB','MB','GB'];const i=Math.floor(Math.log(n)/Math.log(k));return(n/Math.pow(k,i)).toFixed(2)+' '+u[i];};
+  const fmtDate=t=>new Date(t).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+  function toISODate(s){
+    if(!s) return '';
+    s = String(s).trim();
+    if(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s)) return s;             // YYYY-MM-DD
+    let m = s.match(/^([0-9]{2})\/([0-9]{2})\/([0-9]{4})$/);        // DD/MM/YYYY
+    if(m) return m[3]+'-'+m[2]+'-'+m[1];
+    m = s.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4})$/);                // DD-MM-YYYY
+    if(m) return m[3]+'-'+m[2]+'-'+m[1];
+    const d = new Date(s);
+    if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    return '';
+  }
+  function fmtDateISO(iso){
+    try{ const [y,m,d]=iso.split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'}); }catch(e){ return iso; }
+  }
+  function normalizeField(obj, names){
+    for(const k of names){
+      if(obj[k]!==undefined) return obj[k];
+      const hit = Object.keys(obj).find(x=>x.toLowerCase()===String(k).toLowerCase());
+      if(hit) return obj[hit];
+    }
+    return '';
+  }
+  function primaryIdOfRow(r){
+    return normalizeField(r, ['Cut-file','fileName','ชื่อไฟล์','CODE','Code','Part','part','id','ID','Name','ชื่อ','วัสดุ','Materials']) || String(r[Object.keys(r)[0]]||'').trim() || JSON.stringify(r).slice(0,60);
+  }
+  function rowKey(iso, r){ var line = $('lineMain')?$('lineMain').value:''; return iso + '|' + line + '|' + primaryIdOfRow(r); }
+  function numberOrZero(v){ const n = parseFloat(String(v).replace(/[, ]/g,'')); return isNaN(n)?0:n; }
+
+  // === Libraries loader ===
+  async function smartLoad(urls, testFn){
+    return new Promise((resolve)=>{
+      function attempt(i){ if(i>=urls.length){ resolve(false); return; }
+        const s=document.createElement('script'); s.src=urls[i]; s.async=true;
+        s.onload=()=>setTimeout(()=>resolve(testFn()),0); s.onerror=()=>attempt(i+1);
+        document.head.appendChild(s);
+      } attempt(0);
+    });
+  }
+  async function ensureXLSX(){
+    if(window.XLSX) return true;
+    const ok = await smartLoad([
+      'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+      'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+      'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+    ], ()=>!!window.XLSX);
+    return !!ok || !!window.XLSX;
+  }
+  async function ensureQR(){
+    if(!(window.QRCode&&QRCode.toCanvas) && !window.qrcode){
+      await smartLoad([
+        'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+        'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
+      ], ()=>!!(window.QRCode&&QRCode.toCanvas)||!!window.qrcode);
+      if(!window.QRCode && window.qrcode){
+        window.QRCode={toCanvas:function(canvas,text,opts,cb){
+          try{
+            const qr=window.qrcode(0, (window.qrcode.ErrorCorrectLevel&&window.qrcode.ErrorCorrectLevel.M)||'M');
+            qr.addData(String(text||'')); qr.make();
+            const n=qr.getModuleCount(), margin=(opts&&opts.margin!=null)?opts.margin:2;
+            const target=(opts&&opts.width)?opts.width:220; const cell=Math.max(1,Math.floor(target/(n+margin*2))); const size=cell*(n+margin*2);
+            canvas.width=size; canvas.height=size; const ctx=canvas.getContext('2d');
+            ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size); ctx.fillStyle='#000';
+            for(let r=0;r<n;r++){ for(let c=0;c<n;c++){ if(qr.isDark(r,c)){ const x=(c+margin)*cell,y=(r+margin)*cell; ctx.fillRect(x,y,cell,cell);} } }
+            cb&&cb(null);
+          }catch(e){ cb&&cb(e); }
+        }};
+      }
+    }
+    state.maker=!!((window.QRCode&&QRCode.toCanvas)||window.qrcode);
+    updateLibStatus();
+  }
+  async function ensurePDF(){
+    if(window.pdfjsLib){ state.pdf=true; updateLibStatus(); return; }
+    const ok = await smartLoad([
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+      'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js']
+      , ()=>!!window.pdfjsLib);
+    if(ok && window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions){
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    state.pdf=!!window.pdfjsLib; updateLibStatus();
+  }
+  function updateLibStatus(){ const el=$('libStatus'); el.textContent = (state.maker?'':'')+' · '+(state.pdf?'':''); }
+
+  // === DOM Ready ===
+  document.addEventListener('DOMContentLoaded',()=>{
+    loadStore(); loadComments();
+    ensureQR(); updateLibStatus();
+    const d=$('date'); if(d && !d.value){ d.value=(new Date()).toISOString().split('T')[0]; }
+    updateTabs();
+    $('uplock').textContent='ล็อกอยู่'; $('uplock').className='pill bad';
+    renderStoreList();
+    setTimeout(()=>{ window.setListMode('one'); try{$('vOne').focus();}catch(e){} },0);
+    loadLastUpload();
+    try{ mirrorFromUpload(); }catch(e){};
+  });
+
+  // === Left column (folder & list) ===
+  window.setListMode = function(mode){
+    state.listMode = (mode==='one'||mode==='hidden') ? mode : 'all';
+    const a=$('vAll'), o=$('vOne'), h=$('vHide');
+    if(a&&o&&h){
+      a.classList.toggle('active', state.listMode==='all');
+      o.classList.toggle('active', state.listMode==='one');
+      h.classList.toggle('active', state.listMode==='hidden');
+    }
+    const wrap=$('listWrap');
+    if(wrap) wrap.classList.toggle('hidden', state.listMode==='hidden');
+    if(typeof renderList==='function') renderList();
+    if(typeof updateCount==='function') updateCount();
+  };
+
+  let allFiles=[], viewFiles=[], currentIdx=0, blobURL=null;
+  function loadFolder(){
+    const files=[...$('folder').files].filter(f=>/\.pdf$/i.test(f.name));
+    allFiles=files; viewFiles=files; currentIdx=0;
+    renderList(); updateCount();
+    if(files.length){
+      if(!$('fileName').value) $('fileName').value=files[0].name.replace(/\.pdf$/i,'');
+      if(!$('date').value){ const t=new Date(files[0].lastModified); $('date').value=t.toISOString().split('T')[0]; }
+      updateLast2();
+    }
+  }
+  function updateCount(){
+    const base = allFiles.length? allFiles.length + ' ไฟล์' : 'ไม่มีไฟล์';
+    if(!allFiles.length){ $('fileCount').textContent=base; return; }
+    if(state.listMode==='one'){ $('fileCount').textContent='1 จาก ' + allFiles.length + ' ไฟล์'; }
+    else if(state.listMode==='hidden'){ $('fileCount').textContent='ซ่อนรายการ • รวม ' + allFiles.length + ' ไฟล์'; }
+    else{ $('fileCount').textContent=allFiles.length===viewFiles.length ? (allFiles.length+' ไฟล์') : (viewFiles.length+' จาก '+allFiles.length+' ไฟล์'); }
+  }
+  function renderList(){
+    const q=$('search').value?$('search').value.toLowerCase():'';
+    viewFiles=q?allFiles.filter(f=>f.name.toLowerCase().includes(q)):allFiles.slice();
+    $('listWrap').classList.toggle('hidden', state.listMode==='hidden');
+    const box=$('list');
+    if(state.listMode==='hidden'){ updateCount(); return; }
+
+    const listToShow = (state.listMode==='one' && viewFiles.length) ? [viewFiles[0]] : viewFiles;
+    
+  if(state.listMode==='one' && viewFiles.length){ currentIdx = 0; }
+if(!listToShow.length){ box.innerHTML='<div class="meta">ไม่พบไฟล์ที่ตรงกับการค้นหา</div>'; updateCount(); return; }
+
+    let html='';
+    listToShow.forEach(function(f){
+      html+=`<div class="item">
+        <div class="rowflex">
+          <div class="qr-mini"><canvas class="qr-small" width="90" height="90"></canvas></div>
+          <div><div><strong>${f.name}</strong></div>
+          <div class="meta">${fmtSize(f.size)} • ${fmtDate(f.lastModified)}</div></div>
+        </div>
+        <button class="btn" data-open="${f.name.replace(/"/g,'&quot;')}">👁️ ดูตัวอย่าง</button>
+      </div>`;
+    });
+    box.innerHTML=html;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-open]'), function(btn){
+      btn.addEventListener('click', function(){ openPreview(btn.getAttribute('data-open')); });
+    });
+    const latest = $('qrCanvas').width ? collectData() : '';
+    if(latest) renderListQR(latest);
+    updateCount();
+  }
+  function renderListQR(data){ if(!(window.QRCode&&QRCode.toCanvas)) return; Array.prototype.forEach.call(document.querySelectorAll('.qr-small'), function(c){ QRCode.toCanvas(c, data, {width:90, margin:2}, function(){}); }); }
+
+  function openPreview(name){
+    const idx=viewFiles.findIndex(function(f){ return f.name===name; }); if(idx<0) return; currentIdx=idx;
+    const f=viewFiles[currentIdx];
+    if(!$('fileName').value) $('fileName').value=f.name.replace(/\.pdf$/i,'');
+    if(!$('date').value){ const t=new Date(f.lastModified); $('date').value=t.toISOString().split('T')[0]; }
+    updateLast2();
+    if(blobURL) URL.revokeObjectURL(blobURL);
+    blobURL=URL.createObjectURL(f); $('viewer').src=blobURL; $('mName').textContent=f.name; $('mPos').textContent=(currentIdx+1)+'/'+viewFiles.length; $('modal').classList.add('show');
+  }
+  function closePreview(){ $('modal').classList.remove('show'); $('viewer').src=''; if(blobURL){ URL.revokeObjectURL(blobURL); blobURL=null; } }
+  function goPrev(){ if(currentIdx>0) openPreview(viewFiles[currentIdx-1].name); }
+  function goNext(){ if(currentIdx<viewFiles.length-1) openPreview(viewFiles[currentIdx+1].name); }
+  function doPrint(){ const f=viewFiles[currentIdx]; if(!f) return; const url=URL.createObjectURL(f); const w=window.open(url,'_blank'); if(w){ w.onload=function(){ setTimeout(function(){ w.print(); }, 400); }; } setTimeout(function(){ URL.revokeObjectURL(url); }, 10000); }
+  function printWithQR(){ doPrint(); }
+
+  // === Middle column (QR info) ===
+  function setInfo2Enabled(enabled,focusWhenOk=false){
+    $('qr24').disabled=!enabled;
+    if(enabled){ $('s_24').textContent='พร้อมรับข้อมูล 24 ตัวอักษร'; $('s_24').className='status ok'; $('qr24').placeholder='ยิงสแกน 24 ตัวอักษรที่นี่'; if(focusWhenOk)$('qr24').focus(); }
+    else{ $('s_24').textContent='⛔ ถูกล็อกอยู่ — จะปลดล็อกอัตโนมัติเมื่อ 2 ตัวท้ายตรงกัน'; $('s_24').className='status'; $('qr24').value=''; $('qr24').placeholder='ต้องให้ตรงกันก่อน'; }
+  }
+  function checkMatch(gate=false,focusWhenOk=false){
+    const a=$('last2').value.trim(); const b=$('fileName').value.trim().slice(-2); let ok=false;
+    if(a&&b){ ok=(a===b); $('s_match').textContent = ok ? '✅ ตรงกัน' : `❌ ไม่ตรงกัน (${b} ≠ ${a})`; $('s_match').className='status '+(ok?'ok':'bad'); }
+    else{$('s_match').textContent='-';$('s_match').className='status';}
+    if(gate){
+      if(state.requireScan21){ setInfo2Enabled(false,false); }
+      else { setInfo2Enabled(ok,focusWhenOk); }
+    }
+    return ok;
+  }
+  function updateLast2(){
+    const name=$('fileName').value.trim();
+    if(name.length>=2){ $('last2').value=name.slice(-2); $('s_last2').textContent='✅ ตัดได้ “'+$('last2').value+'”'; $('s_last2').className='status ok'; }
+    else if(name.length===1){ $('last2').value=name; $('s_last2').textContent='⚠️ มีเพียง 1 ตัวอักษร'; $('s_last2').className='status warn'; }
+    else{ $('last2').value=''; $('s_last2').textContent='จะตัด 2 ตัวท้ายให้อัตโนมัติ'; $('s_last2').className='status'; }
+    checkMatch(true,false);
+  }
+  function onQR21(){
+    const v=$('qr21').value;
+    if(v.length===21){
+      const cut=v.substring(14,16); $('last2').value=cut; $('s_21').textContent='✅ สกัด “'+cut+'” จากตำแหน่ง 15-16'; $('s_21').className='status ok';
+      state.requireScan21=false;
+      const ok=checkMatch(true,true); if(!ok){ $('qr21').focus(); }
+    }else if(v.length<21){ $('s_21').textContent='⏳ '+v.length+'/21'; $('s_21').className='status'; setInfo2Enabled(false,false); }
+    else{ $('s_21').textContent='❌ เกิน 21 ตัวอักษร ('+v.length+')'; $('s_21').className='status bad'; setInfo2Enabled(false,false); }
+  }
+  function onQR24(){
+    const vRaw=$('qr24').value; const v=vRaw.replace(/\s/g,'');
+    if(v!==vRaw){ $('qr24').value=v; }
+    if(v.length===24){
+      $('s_24').textContent='✅ ได้ครบ 24 ตัวอักษร'; $('s_24').className='status ok';
+      if(CFG.autoBuild){ makeQR(); }
+    }else if(v.length<24){ $('s_24').textContent='⏳ '+v.length+'/24'; $('s_24').className='status'; }
+    else{ $('s_24').textContent='❌ เกิน 24 ตัวอักษร ('+v.length+')'; $('s_24').className='status bad'; }
+  }
+  function collectData(){
+    const name=$('fileName').value.trim(), info2=$('qr24').value.trim(), date=$('date').value;
+    return (name&&info2&&date)?(name+'|'+info2+'|'+date):'';
+  }
+  async function makeQR(){
+    await ensureQR();
+    if(!(window.QRCode&&QRCode.toCanvas)){ alert('ยังไม่มีตัวสร้าง QR — โปรดเชื่อมต่ออินเทอร์เน็ต'); return; }
+    const data=collectData(); if(!data){ return; }
+    return new Promise(function(resolve){
+      QRCode.toCanvas($('qrCanvas'), data, {width:180, margin:2}, function(err){
+        if(err){ console.error(err); resolve(false); return; }
+        renderListQR(data);
+        if(CFG.autoClear){
+          $('qr21').value=''; $('s_21').textContent='รอข้อมูล 21 ตัวอักษร…'; $('s_21').className='status';
+          $('qr24').value=''; $('s_24').textContent='พร้อมรับข้อมูล 24 ตัวอักษร'; $('s_24').className='status ok';
+          $('qr21').focus();
+        }
+        resolve(true);
+      });
+    });
+  }
+
+  // === Upload page ===
+  function showPage(p){
+    const prev = state.page;
+    state.page = p;
+    $('pageMain').classList.toggle('hidden', p!=='main');
+    if(p==='main'){ try{ mirrorFromUpload(); }catch(e){} }
+    $('pageUpload').classList.toggle('hidden', p!=='upload');
+    updateTabs();
+    if(prev==='upload' && p!=='upload'){
+      $('uplock').textContent='ล็อกอยู่';
+      $('uplock').className='pill bad';
+    }
+  }
+  function updateTabs(){
+    $('tabMain').classList.toggle('active', state.page==='main');
+    $('tabUpload').classList.toggle('active', state.page==='upload');
+  }
+  function goUpload(){
+    $('passModal').classList.add('show');
+    setTimeout(()=>$('passcode').focus(), 0);
+  }
+  function cancelPass(){ $('passModal').classList.remove('show'); $('passcode').value=''; $('passMsg').textContent=''; }
+  function tryPass(){
+    const v=$('passcode').value.trim();
+    if(v==='12345'){
+      $('uplock').textContent='ปลดล็อกแล้ว';
+      $('uplock').className='pill ok';
+      cancelPass();
+      showPage('upload');
+    }else{
+      $('passMsg').textContent='รหัสไม่ถูกต้อง';
+      $('passMsg').className='status bad';
+    }
+  }
+
+  let uploadRows=[]; // last parsed file (preview)
+  let lastFileName='';
+  function handleUploadFile(files){
+    uploadRows=[];
+    const f=files&&files[0]; if(!f){ $('upStatus').textContent='ยังไม่ได้เลือกไฟล์'; $('upTable').innerHTML=''; return; }
+    lastFileName = f.name || '';
+    $('upStatus').textContent='ไฟล์: '+lastFileName+' • '+fmtSize(f.size);
+    if(/\.(xlsx|xls)$/i.test(lastFileName)){
+      (async()=>{
+        const ok = await ensureXLSX();
+        if(!ok){ $('upStatus').textContent='ไม่สามารถโหลดไลบรารีอ่าน Excel ได้ (ออฟไลน์หรือ CDN ล่ม)'; return; }
+        try{
+          const buf = await f.arrayBuffer();
+          const wb = XLSX.read(buf, {type:'array'});
+          const sheetName = wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(ws, {defval:'', raw:false});
+          buildRowsFromJSON(json);
+          $('upStatus').textContent = 'อ่าน Excel เรียบร้อย • แผ่นงาน: '+sheetName+' • '+json.length+' แถว';
+        }catch(e){
+          $('upStatus').textContent='อ่าน Excel ไม่ได้: '+e.message;
+          $('upTable').innerHTML='';
+        }
+      })();
+      return;
+    }
+    const reader=new FileReader();
+    if(/\.json$/i.test(lastFileName)){
+      reader.onload=function(){ try{ const data=JSON.parse(reader.result); buildRowsFromJSON(data); }catch(e){ $('upStatus').textContent='อ่าน JSON ไม่ได้: '+e.message; $('upTable').innerHTML=''; } };
+      reader.readAsText(f);
+    }else{
+      reader.onload=function(){ buildRowsFromCSV(reader.result); };
+      reader.readAsText(f,'utf-8');
+    }
+  }
+  function buildRowsFromJSON(data){
+    if(Array.isArray(data)){ uploadRows=data; } else if(data && Array.isArray(data.rows)){ uploadRows=data.rows; } else { uploadRows=[data]; }
+    uploadRows=uploadRows.map(r=>{ const d=r.date||r['วันที่']||r['Date']||''; return Object.assign({}, r, {_d: toISODate(d)}); });
+    saveLastUpload(lastFileName);
+    renderUploadTable();
+  }
+  function buildRowsFromCSV(text){
+    const lines=text.split(/\r?\n/).filter(l=>l.trim().length>0);
+    if(lines.length===0){ $('upTable').innerHTML='<div class="status">ไฟล์ว่าง</div>'; return; }
+    const header=lines[0].split(',').map(s=>s.trim());
+    const rows=[];
+    for(let i=1;i<lines.length;i++){
+      const cols=lines[i].split(','); const obj={};
+      header.forEach((h,idx)=>{ obj[h]= (cols[idx]||'').trim(); });
+      rows.push(obj);
+    }
+    uploadRows=rows.map(r=>{ const d=r.date||r['วันที่']||r['Date']||''; return Object.assign({}, r, {_d: toISODate(d)}); });
+    saveLastUpload(lastFileName);
+    renderUploadTable();
+  }
+  function renderUploadTable(){
+    try{ mirrorFromUpload(); }catch(e){};
+    const box=$('upTable');
+    if(!uploadRows.length){ box.innerHTML='<div class="status">ไม่มีข้อมูลแสดง</div>'; $('addInfo').textContent=''; return; }
+    const want=$('upDateFilter')?$('upDateFilter').value:'';
+    const rows = want? uploadRows.filter(r=>r._d===want) : uploadRows;
+    const keys=new Set(); rows.forEach(r=>Object.keys(r).forEach(k=>keys.add(k))); const cols=[...keys];
+    let html='<div class="hint">';
+    if(want){ html+=' • กำหนดวันที่: <strong>'+want+'</strong>'; } var lf=($('upLineFilter')&&$('upLineFilter').value)||''; if(lf){ html+=' • ไลน์ผลิต: <strong>'+lf+'</strong>'; }
+    html+='</div>';
+    html+='<table><thead><tr>';
+    cols.forEach(c=>{ html+='<th>'+c+'</th>'; });
+    html+='</tr></thead><tbody>';
+    rows.forEach((r,idx)=>{
+      html+='<tr data-idx="'+idx+'">';
+      cols.forEach(c=>{ html+='<td>'+ (r[c]!==undefined ? String(r[c]) : '') +'</td>'; });
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+    box.innerHTML=html;
+
+    const distinct = Array.from(new Set(uploadRows.map(r=>r._d).filter(Boolean)));
+    let target = want || (distinct.length===1 ? distinct[0] : '');
+    const msg = target ? ('จะเพิ่มให้วันที่: <strong>'+target+'</strong>') : 'กรุณาระบุ "ฟิลเตอร์วันที่" ด้านบนก่อน เพื่อเลือกวันที่ที่จะเพิ่มลงระบบ';
+    $('addInfo').innerHTML = msg;
+    $('addBtn').disabled = !target;
+    $('addBtn').setAttribute('data-target', target||'');
+
+    Array.prototype.forEach.call(document.querySelectorAll('#upTable tbody tr'), tr=>{
+      tr.addEventListener('click', function(){
+        const i=parseInt(tr.getAttribute('data-idx'),10);
+        const wantDate=$('upDateFilter')?$('upDateFilter').value:'';
+        let idx=i;
+        if(wantDate){ const matched=uploadRows.filter(r=>r._d===wantDate); const r=matched[i]; idx=uploadRows.indexOf(r); }
+        pickRow(idx);
+      });
+    });
+  }
+  function addCurrentToStore(){
+    const t = $('addBtn').getAttribute('data-target')||'';
+    if(!t){ alert('โปรดเลือก "ฟิลเตอร์วันที่" ก่อน'); return; }
+    const rows = uploadRows.filter(r=> (r._d||'')===t );
+    if(rows.length===0){
+      if(confirm('ไม่พบแถวที่มีวันที่ '+t+' ในไฟล์นี้ — ต้องการเพิ่มทั้งไฟล์และตีความเป็นวันที่นี้หรือไม่?')){
+        const forced = uploadRows.map(r=>Object.assign({}, r, {_d:t}));
+        putIntoStore(t, forced, lastFileName, ($('upLineFilter')?$('upLineFilter').value:''));
+        alert('เพิ่มลงคลังแล้วสำหรับวันที่ '+t+' (ทั้งไฟล์)');
+      }
+      return;
+    }
+    putIntoStore(t, rows, lastFileName, ($('upLineFilter')?$('upLineFilter').value:''));
+    alert('เพิ่มลงคลังแล้วสำหรับวันที่ '+t+' ('+rows.length+' แถว)');
+  }
+  function renderStoreList(){
+    const box = $('storeList'); if(!box) return;
+    const keys = Object.keys(uploadStore.byDate).sort();
+    if(keys.length===0){ box.innerHTML='<div class="status"></div>'; return; }
+    let html='';
+    keys.forEach(k=>{
+      const rec = uploadStore.byDate[k]||{rows:[],ts:0,name:'',line:''};
+      const count = (rec.rows||[]).length;
+      const when = rec.ts ? new Date(rec.ts).toLocaleString('th-TH') : '-';
+      const parts = String(k).split('|');
+      const iso = parts[0]||'';
+      const line = parts[1]||rec.line||'';
+      html += `
+        <div class="storeItem">
+          <div>
+            <div><strong class="mono">${iso}</strong> ${line?`<span class="badge neutral">${line}</span>`:''} <span class="badge ok">${count} แถว</span></div>
+            <div class="status">อัปเดตล่าสุด: ${when}${rec.name?(' • จากไฟล์: '+rec.name):''}</div>
+          </div>
+          <div class="inline" style="gap:6px">
+            <button class="btn" data-use="${k}">ไปที่รายการนี้</button>
+            <button class="btn gray" data-remove="${k}">ลบ</button>
+          </div>
+        </div>`;
+    });
+    box.innerHTML = html;
+    box.querySelectorAll('[data-use]').forEach(btn=>btn.addEventListener('click',()=>useDateOnMain(btn.dataset.use)));
+    box.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>removeFromStore(btn.dataset.remove)));
+  }
+  function useDateOnMain(isoKey){
+    const parts = String(isoKey||'').split('|');
+    const iso = parts[0]||'';
+    const line = parts[1]||'';
+    $('date').value = iso;
+    if($('lineMain')){ $('lineMain').value = line; }
+    showPage('main'); mirrorFromUpload();
+  }
+
+  function pickRow(i){
+    const r=uploadRows[i]||{};
+    const fname = r.fileName || r.filename || r.name || r['ชื่อไฟล์'] || r['filename'] || r['FILE'] || '';
+    const date  = r._d || r.date || r['วันที่'] || r['date'] || '';
+    $('search').value = String(fname||'').toUpperCase();
+    onSearchInput();
+    if(date){ $('date').value = toISODate(date) || date; }
+    showPage('main');
+    onSearchDone();
+  }
+
+  // === Search helpers (left column) ===
+  function onSearchInput(){
+  const el = $('search');
+  if(el){
+    const pos = el.selectionStart;
+    const up = (el.value||'').toUpperCase();
+    if(el.value !== up){
+      el.value = up;
+      try{ el.setSelectionRange(pos, pos); }catch(e){}
+    }
+  }
+  renderList(); updateCount();
+}
+  function clearSearch(){ $('search').value=''; onSearchInput(); }
+  function onSearchDone(){
+  // sync selection to search results
+  try{
+    const s2 = document.getElementById('search');
+    const q2 = (s2 && s2.value ? s2.value.trim().toLowerCase() : '');
+    if (typeof viewFiles !== 'undefined' && viewFiles.length){
+      const ixExact = viewFiles.findIndex(f => f.name.toLowerCase() === q2);
+      const ixPart  = viewFiles.findIndex(f => f.name.toLowerCase().includes(q2));
+      currentIdx = (ixExact >= 0) ? ixExact : (ixPart >= 0 ? ixPart : 0);
+    }
+  }catch(e){};
+
+  const s = document.getElementById('search');
+  const q = (s && s.value ? s.value : '').trim().toUpperCase(); if(s) s.value = q;
+  if(!q){ if(s) s.focus(); return; }
+  // copy to "ชื่อไฟล์"
+  const fn = document.getElementById('fileName');
+  if(fn){
+    fn.value = q;
+    try{ if(typeof updateLast2==='function') updateLast2(); }catch(e){}
+  }
+  // focus QR21
+  const el = document.getElementById('qr21');
+  if(el){
+    try{ el.focus(); el.select(); }catch(e){}
+    try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+  }
+}
+
+
+  function setCmtFilter(mode){
+    state.cmtFilter = mode;
+    localStorage.setItem('pdfqr_cmt_filter', mode);
+    mirrorFromUpload();
+  }
+  function showSummaryDialog(c){
+    alert(
+      'สรุปสถานะงาน (ตามวันที่ที่เลือก)\\n'+
+      '- ทั้งหมด: ' + c.total + ' แถว\\n'+
+      '- เสร็จแล้ว: ' + c.done + ' แถว\\n'+
+      '- ค้าง (มีคอมเม้น): ' + c.todo + ' แถว\\n'+
+      '- ยังไม่มีคอมเม้น: ' + c.none + ' แถว'
+    );
+  }
+
+  // === Mirror upload store -> main filters (+ comments) ===
+  function getRowsForDate(iso, line){
+    const key = (iso||'') + '|' + (line||'');
+    let rec = uploadStore.byDate[key];
+    if(!rec){ rec = uploadStore.byDate[iso]; } // fallback legacy
+    if(rec && Array.isArray(rec.rows) && rec.rows.length>0){
+      return rec.rows;
+    }
+    return [];
+  }
+  function mirrorFromUpload(){
+    const box = $('mirrorBox'); if(!box) return;
+    const iso = $('date') ? $('date').value : '';
+    if(!iso){ box.innerHTML='<div class="status">ยังไม่เลือกวันที่</div>'; return; }
+    const line = $('lineMain') ? $('lineMain').value : '';
+  if(!line){ box.innerHTML='<div class="status">ยังไม่เลือกไลน์ผลิต</div>'; return; }
+  const rows = getRowsForDate(iso, line);
+    if(rows.length===0){ box.innerHTML='<div class="status">ไม่มีข้อมูลจาก “อัปโหลดข้อมูล” สำหรับวันที่ '+iso+'</div>'; return; }
+
+    // Counters
+    let sumTimes=0, sumPieces=0;
+    let cntDone=0, cntTodo=0, cntNone=0;
+    const classify = (r)=>{
+      const key = rowKey(iso, r);
+      const cm = comments[key];
+      if(cm){ if(cm.done) return 'done'; return 'todo'; }
+      return 'none';
+    };
+    var targetFilled=0, targetEmpty=0; var targetSet=new Set();
+    rows.forEach(r=>{
+      sumTimes += numberOrZero( normalizeField(r, ['จำนวนครั้ง','times','count','Times']) );
+      sumPieces += numberOrZero( normalizeField(r, ['จำนวนที่ตัดได้(ชิ้น)','pieces','qty','Quantity']) );
+      const t = classify(r);
+      if(t==='done') cntDone++; else if(t==='todo') cntTodo++; else cntNone++;
+      var tgt = normalizeField(r, ['P/NO เป้าหมาย','P/NO','เป้าหมาย','Target']);
+      if(tgt && String(tgt).trim()){ targetFilled++; targetSet.add(String(tgt).trim()); } else { targetEmpty++; }
+    });
+
+    // Apply filter
+    const show = rows.filter(r=>{
+      const t = classify(r);
+      if(state.cmtFilter==='done') return t==='done';
+      if(state.cmtFilter==='todo') return t==='todo';
+      if(state.cmtFilter==='none') return t==='none';
+      if(state.cmtFilter==='noted') return t!=='none';
+      return true; // all
+    }).slice(0,600);
+
+    const keys = new Set(); show.forEach(r=>Object.keys(r).forEach(k=>keys.add(k)));
+    const cols = Array.from(keys);
+    var pref = ['P/NO เป้าหมาย','Trim','Cut-file','Materials','จำนวนครั้ง','จำนวนที่ตัดได้(ชิ้น)','_d'];
+    var rest = cols.filter(c => pref.indexOf(c) === -1);
+
+    let html = '';
+    html += '<div class="inline" style="justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">';
+    html +=   '<div class="inline" style="gap:8px;flex-wrap:wrap">';
+    html +=     '<div class="status">วันที่ '+fmtDateISO(iso)+' • ทั้งหมด '+rows.length+' แถว • รวมครั้ง: <strong>'+sumTimes+'</strong> • รวมชิ้น: <strong>'+sumPieces+'</strong></div>';
+    html +=     '<span class="pill ok">งานที่เสร็จแล้ว '+cntDone+'</span>';
+    html +=     '<span class="pill warn">งานค้างแผน '+cntTodo+'</span>';
+    html +=     '<span class="pill neutral">งานที่ยังไม่ได้ทำ '+cntNone+'</span>';
+    html +=     '<span class="pill">เป้าหมายวันนี้ '+targetFilled+'</span>';
+    html +=     '<span class="pill gray"> '+targetEmpty+'</span>';
+    html +=     '<span class="pill neutral">เป้าหมายไม่ซ้ำ '+targetSet.size+'</span>';
+    html +=   '</div>';
+    html +=   '<div class="inline" style="gap:6px">';
+    html +=     '<div class="seg">';
+    ['all','todo','done','noted'].forEach(mode=>{
+      const label = mode==='all'?'ทั้งหมด': mode==='todo'?'ค้าง': mode==='done'?'เสร็จแล้ว':'มีคอมเม้น';
+      const active = (state.cmtFilter===mode)?'active':'';
+      html += `<button class="${active}" data-cmt="${mode}">${label}</button>`;
+    });
+    html +=     '</div>';
+    html +=     '<button class="btn gray" id="btnSum">สรุป</button>';
+    html +=     '<button class="btn" id="btnExportCSV">ส่งออก CSV</button>';
+    html +=     '<button class="btn" id="btnExportXLS">ส่งออก Excel</button>';
+    html +=     '<button class="btn ghost" id="btnRefresh">รีเฟรช</button>';
+    html +=   '</div>';
+    html += '</div>';
+
+    html += '<div class="mirror-scroller">';
+    html += '<table><thead><tr>'; 
+    html += '<th>P/NO เป้าหมาย</th>';
+    html += '<th>Trim</th>';
+    html += '<th>Cut-file</th>';
+    html += '<th>สถานะ</th>';
+    html += '<th>Materials</th>';
+    html += '<th>จำนวนครั้ง</th>';
+    html += '<th>จำนวนที่ตัดได้(ชิ้น)</th>';
+    html += '<th>_d</th>';
+    rest.forEach(c=>{ if(['P/NO เป้าหมาย','Trim','Cut-file','Materials','จำนวนครั้ง','จำนวนที่ตัดได้(ชิ้น)','_d'].indexOf(c)===-1){ html += '<th>'+c+'</th>'; }});
+    html += '<th>วันและเวลา</th>';
+    html += '</tr></thead><tbody>';show.forEach((r)=>{
+      const id = primaryIdOfRow(r);
+      const key = rowKey(iso, r);
+      const cm = comments[key];
+      const mark = cm ? (cm.done ? '✅' : '📝') : '＋';
+      const cls = cm ? (cm.done ? 'marker done' : 'marker todo') : 'marker none';
+      const title = cm ? ((cm.done?'สำเร็จแล้ว — ':'ยังไม่สำเร็จ — ') + (cm.note||'').replace(/"/g,'\"')) : 'เพิ่มคอมเมนต์';
+      const listText = cm ? (cm.done ? 'งานนี้เสร็จแล้ว' : (cm.note||'')) : '';
+      html += `<tr data-rowkey="${key}" data-display="${id}" title="${title}">`;
+      var vPno = normalizeField(r, ['P/NO เป้าหมาย','P/NO','เป้าหมาย','Target']);
+      var vTrim = normalizeField(r, ['Trim','TRIM','trim']);
+      var vCut  = normalizeField(r, ['Cut-file','fileName','ชื่อไฟล์']);
+      var vMat  = normalizeField(r, ['Materials','วัสดุ']);
+      var vTimes = normalizeField(r, ['จำนวนครั้ง','times','count','Times']);
+      var vPieces = normalizeField(r, ['จำนวนที่ตัดได้(ชิ้น)','pieces','qty','Quantity']);
+      var vDate = normalizeField(r, ['_d','date','วันที่','Date']);
+      html += '<td><div class="pno-edit" contenteditable="true" data-iso="'+iso+'" data-id="'+id+'" onkeydown="onPnoKey(event)" onblur="commitPno(this)">' + (vPno||'') + '</div></td>';
+      html += '<td>'+ (vTrim||'') +'</td>';
+      html += '<td><span class="val">' + (vCut||'') + '</span> <button class="sendSearch" title="ส่งไปค้นหา">ส่งไปค้นหา</button></td>';
+      html += `<td class="${cls}">${mark}</td>`;
+      html += '<td>'+ (vMat||'') +'</td>';
+      html += '<td>'+ (vTimes||'') +'</td>';
+      html += '<td>'+ (vPieces||'') +'</td>';
+      html += '<td>'+ (vDate||'') +'</td>';
+      rest.forEach(function(c){ html += '<td>'+ (r[c]!==undefined? String(r[c]) : '') +'</td>'; });
+      var tsCell = (cm && Array.isArray(cm.logs) && cm.logs.length) ? fmtDateTime(cm.logs[cm.logs.length-1]) : (cm && cm.ts ? fmtDateTime(cm.ts) : '');
+      html += '<td>'+ tsCell +'</td>';
+      html += '<td>'+ listText +'</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    box.innerHTML = html;
+
+    box.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=>openCommentEditor(tr.dataset.rowkey, tr.dataset.display, iso));
+    });
+    box.querySelectorAll('[data-cmt]').forEach(btn=>{
+      btn.addEventListener('click', ()=>setCmtFilter(btn.dataset.cmt));
+    });
+    $('btnRefresh').addEventListener('click', ()=>mirrorFromUpload());
+    $('btnSum').addEventListener('click', ()=>showSummaryDialog({total:rows.length, done:cntDone, todo:cntTodo, none:cntNone}));
+    if($('btnExportCSV')) $('btnExportCSV').addEventListener('click', exportCSV_fromDom);
+    if($('btnExportXLS')) $('btnExportXLS').addEventListener('click', exportXLS_fromDom);
+    // ส่ง Cut-file ไปยังช่องค้นหา
+    box.querySelectorAll('.sendSearch').forEach(function(btn){
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var td = btn.closest('td');
+        var v = td && td.querySelector('.val') ? td.querySelector('.val').innerText : '';
+        v = String(v||'').trim();
+        if(v){
+          try{ $('search').value = v.toUpperCase(); onSearchInput(); onSearchDone(); }catch(e){}
+        }
+      });
+    });
+
+    // คลิกทั้งแถว -> ส่ง Cut-file ไปค้นหา (ยกเว้นคลิกที่ปุ่ม/ลิงก์/อินพุต)
+    box.querySelectorAll('tbody tr').forEach(function(tr){
+      tr.classList.add('mirrorRowClick');
+      tr.addEventListener('click', function(ev){
+        var tag = (ev.target && ev.target.tagName || '').toLowerCase();
+        if (tag === 'button' || tag === 'a' || tag === 'input' || (ev.target.closest && ev.target.closest('.btn'))) return;
+        var tds = tr.querySelectorAll('td');
+        var td = tds[2]; // คอลัมน์ Cut-file
+        var val = td && td.querySelector('.val') ? td.querySelector('.val').innerText : (td ? td.innerText : '');
+        val = String(val || '').trim();
+        if(val){
+          try{ $('search').value = val.toUpperCase(); onSearchInput(); onSearchDone(); }catch(e){}
+        }
+      });
+    });
+
+  }
+
+  // === Comment editor modal ===
+  function openCommentEditor(key, display, iso){
+    $('cmtTarget').textContent = display || '(ไม่ทราบรายการ)';
+    $('cmtDate').textContent = fmtDateISO(iso);
+    $('cmtKey').value = key;
+    const cm = comments[key] || {done:false, note:'', ts:0, id:display, date:iso};
+    $('cmtDone').checked = !!cm.done;
+    $('cmtNote').value = cm.note || '';
+    $('commentModal').classList.add('show');
+  }
+  function saveComment(){
+    const key = $('cmtKey').value;
+    const done = $('cmtDone').checked;
+    const note = $('cmtNote').value.trim();
+    const parts = key.split('|');
+    const iso = parts[0] || ($('date').value||'');
+    const id  = $('cmtTarget').textContent || '';
+    var prev = comments[key] || {};
+    var logs = Array.isArray(prev.logs) ? prev.logs.slice() : [];
+    logs.push(Date.now());
+    comments[key] = {done: done, note: note, ts: Date.now(), id: id, date: iso, logs: logs};
+    saveComments();
+    $('commentModal').classList.remove('show');
+    mirrorFromUpload();
+  }
+  function deleteComment(){
+    const key = $('cmtKey').value;
+    if(comments[key]){ delete comments[key]; saveComments(); }
+    $('commentModal').classList.remove('show');
+    mirrorFromUpload();
+  }
+  function cancelComment(){ $('commentModal').classList.remove('show'); }
+
+
+
+function fmtDateTime(ts){
+  try{
+    if(!ts) return '';
+    const n = Number(ts);
+    if(!isFinite(n)) return '';
+    return new Date(n).toLocaleString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }catch(e){ return ''; }
+}
+</script>
+<style>
+@media (min-width: 1024px){
+  .wrap{
+    margin-left: 8px;
+    margin-right: auto;
+    padding-left: 12px;
+  }
+}
+</style><style>
+.pno-edit{ padding:4px 6px; border:1px dashed transparent; border-radius:6px; min-width:120px; display:inline-block }
+.pno-edit:focus{ outline:0; border-color:#93c5fd; background:#eff6ff }
+.pill.gray{ background:#f1f5f9; border-color:#e2e8f0; color:#334155 }
+</style><style>
+/* === Mini Calendar for 🧰ข้อมูลการผลิตแต่ละไลน์ === */
+.cal{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:8px}
+.cal .cal-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.cal .cal-head .nav{display:flex;gap:6px}
+.cal .cal-head button{padding:6px 10px;border:1px solid var(--bd);background:#fff;border-radius:10px;cursor:pointer}
+.cal .cal-head .label{font-weight:600}
+.cal .days{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cal .day{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;border:2px solid #16a34a;color:#15803d;background:#dcfce7;font-weight:700}
+.cal .day.muted{opacity:.45;border-color:#94a3b8;background:#f1f5f9;color:#475569}
+.cal .day.empty{border-color:#cbd5e1;background:#fff;color:#334155}
+.cal .day.active{background:#16a34a;border-color:#16a34a;color:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.18)}
+.cal .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:#475467;margin-top:4px}
+.cal .legend .chip{display:inline-flex;align-items:center;gap:6px}
+.cal .chip .demo{width:14px;height:14px;border-radius:999px;border:2px solid #16a34a;background:#dcfce7;display:inline-block}
+.cal .chip .demo.none{border-color:#cbd5e1;background:#fff}
+.cal .chip .demo.muted{border-color:#94a3b8;background:#f1f5f9}
+</style><style>
+/* layout: calendar above, section below */
+#calendarBox{margin: 10px 0 12px 0;}
+</style></head>
+<body>
+<div class="wrap">
+<h1>ระบบปริ้นไฟล์ PDF + สร้าง/ตรวจสอบ QR</h1>
+<div class="status" id="libStatus">กำลังตรวจสอบไลบรารี…</div>
+<div class="tabs">
+<button class="tab active" id="tabMain" onclick="showPage('main')">📄 หน้าหลัก</button>
+<button class="tab" id="tabUpload" onclick="goUpload()">⬆️ อัปโหลดข้อมูล</button>
+<span class="pill bad" id="uplock">ล็อกอยู่</span>
+</div>
+<!-- Main Page -->
+<div id="pageMain">
+<div class="grid-main">
+<div class="card">
+<h3 class="title">📁 เลือกโฟลเดอร์ &amp; รายการไฟล์ PDF</h3>
+<div class="inline" style="gap:8px">
+<input class="searchShort" id="search" oninput="onSearchInput()" onkeydown="if(event.key==='Enter'){onSearchDone()}" placeholder="ค้นหาชื่อไฟล์..."/>
+<button class="btn gray" onclick="clearSearch()">ลบข้อมูลในช่อง</button>
+<input directory="" id="folder" multiple="" style="padding:10px;border:1px dashed #cfd5e1;border-radius:10px;background:#fff" type="file" webkitdirectory=""/>
+<button class="btn" id="btnLoad" onclick="loadFolder()">โหลดโฟลเดอร์</button>
+<div class="seg" title="โหมดการแสดงรายการ">
+<button id="vAll" onclick="setListMode('all')">ทั้งหมด</button>
+<button class="active" id="vOne" onclick="setListMode('one')">1 รายการ</button>
+<button id="vHide" onclick="setListMode('hidden')">ซ่อน</button>
+</div>
+<div class="grow"></div>
+</div>
+<div class="status" id="fileCount" style="margin-top:8px">ไม่มีไฟล์</div>
+<div id="listWrap" style="margin-top:10px">
+<div class="list" id="list">
+<div class="meta">ไม่มีไฟล์ในรายการ…</div>
+</div>
+</div>
+</div>
+<div class="card">
+<h3 class="title">📝 ข้อมูลไฟล์ &amp; สร้าง QR</h3>
+<div class="row">
+<div>
+<label>ชื่อไฟล์</label>
+<input id="fileName" oninput="updateLast2()" placeholder="เช่น DA0101A-18"/>
+<div class="status" id="s_last2">ตัดอัตโนมัติ</div>
+</div>
+<div>
+<label>สีของ file + สีของม้วน</label>
+<input id="last2" placeholder="อัตโนมัติ" readonly=""/>
+<div class="status" id="s_match">-</div>
+</div>
+</div>
+<div class="row2" style="margin-top:10px">
+<div>
+<label>ข้อมูลม้วน</label>
+<input id="qr21" oninput="onQR21()" placeholder="ยิงสแกน"/>
+<div class="status" id="s_21">รอข้อมูล…</div>
+</div>
+<div>
+<label>ข้อมูล RF</label>
+<input disabled="" id="qr24" onchange="onQR24()" oninput="onQR24()" placeholder="ต้องสีของม้วนตรงกันก่อน"/>
+<div class="status" id="s_24">⛔ ถูกล็อกอยู่ — จะปลดล็อกอัตโนมัติเมื่อข้อมูลตรงกัน</div>
+</div>
+</div>
+<div class="inline" style="margin-top:12px">
+<div class="qrbox"><canvas height="180" id="qrCanvas" width="180"></canvas></div>
+<button class="btn" id="btnBuild" onclick="makeQR()">สร้าง/อัปเดต QR</button>
+<button class="btn" onclick="printWithQROverlay()">🖨️ ปริ้นพร้อม QR</button>
+</div>
+</div>
+<div class="card">
+<div id="calendarBox"></div><h3 class="title">🧰ข้อมูลการผลิตแต่ละไลน์</h3><div class="filters" id="extraFilters">
+<div class="rowfit">
+<div>
+<label>วันที่</label>
+<input id="date" onchange="mirrorFromUpload()" type="date"/>
+</div>
+<div class="status"></div>
+</div>
+<div class="rowfit">
+<div>
+<label>ไลน์ผลิต</label>
+<select id="lineMain" onchange="mirrorFromUpload()">
+<option value="">— เลือกไลน์ —</option>
+<option value="ไลน์J30A">ไลน์J30A</option>
+<option value="ไลน์J30S">ไลน์J30S</option>
+<option value="ไลน์J69P">ไลน์J69P</option>
+</select>
+</div>
+<div class="status"></div>
+</div>
+<div class="card" id="mirrorBox" style="border:1px dashed #cfd5e1;background:#fff;padding:12px;border-radius:12px">
+<div class="status"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Upload Page -->
+<div class="hidden" id="pageUpload">
+<div class="card">
+<h3 class="title">⬆️ อัปโหลดข้อมูล</h3>
+<div class="uploader">
+<div class="inline" style="align-items:center">
+<input accept=".csv,.json,.xlsx,.xls" id="upFile" onchange="handleUploadFile(this.files)" type="file"/>
+<div class="status" id="upStatus">รองรับ CSV / JSON / Excel (.xlsx/.xls) •</div>
+<span class="note" id="lastBadge"></span>
+<div class="inline" style="gap:8px;margin-left:8px;">
+<label style="margin:0"></label>
+<input id="upDateFilter" onchange="renderUploadTable()" type="date"/>
+<button class="btn gray" onclick="document.getElementById('upDateFilter').value=''; renderUploadTable();">ลบข้อมูล</button>
+</div>
+<div class="inline" style="gap:8px;margin-left:8px;">
+<label style="margin:0">ไลน์ผลิต</label>
+<select id="upLineFilter" onchange="renderUploadTable()">
+<option value="">— ไม่กำหนด —</option>
+<option value="ไลน์J30A">ไลน์J30A</option>
+<option value="ไลน์J30S">ไลน์J30S</option>
+<option value="ไลน์J69P">ไลน์J69P</option>
+</select>
+</div>
+<div class="grow"></div>
+<button class="btn gray" onclick="clearLastUpload()">ลบระบบลงข้อมูลใหม่</button>
+<button class="btn gray" onclick="showPage('main')">← กลับหน้าหลัก</button>
+</div>
+<div id="upTable"></div>
+<div class="store" style="margin-top:12px">
+<div class="inline" style="gap:8px;align-items:center">
+<button class="btn" id="addBtn" onclick="addCurrentToStore()">โหลดเข้าระบบ</button>
+<div class="status" id="addInfo"></div>
+</div>
+<div class="status"></div>
+<div class="storeList" id="storeList"></div>
+</div>
+<div class="hint">ตัวอย่างคอลัมน์ที่รองรับ: <code>fileName</code>, <code>date</code> (หรือ "ชื่อไฟล์", "วันที่")</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Passcode Modal -->
+<div class="passmodal" id="passModal" onclick="if(event.target===this) cancelPass()">
+<div class="passcard">
+<h3 style="margin:0 0 8px">🔒 ใส่รหัสเพื่อเข้า “อัปโหลดข้อมูล”</h3>
+<div class="status">รหัสผ่านที่กำหนดโดยผู้ดูแล</div>
+<div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+<input id="passcode" onkeydown="if(event.key==='Enter'){tryPass()}" placeholder="กรอกรหัส" type="password"/>
+<button class="btn" onclick="tryPass()">ยืนยัน</button>
+<button class="btn gray" onclick="cancelPass()">ยกเลิก</button>
+</div>
+<div class="status" id="passMsg" style="margin-top:8px"></div>
+<div class="hint" style="margin-top:6px">* รหัสตัวอย่างสำหรับทดสอบ:*****</div>
+</div>
+</div>
+<!-- Comment Modal -->
+<div class="passmodal" id="commentModal" onclick="if(event.target===this) cancelComment()">
+<div class="passcard" style="min-width:560px;max-width:860px">
+<h3 style="margin:0 0 8px">💬 คอมเม้นรายการงาน</h3>
+<div class="status" style="margin-bottom:10px">ระบุว่างานเสร็จหรือยัง และเพิ่มข้อความปัญหา/โน้ต</div>
+<input id="cmtKey" type="hidden"/>
+<div class="inline" style="gap:12px;flex-wrap:wrap">
+<div><strong>วันที่:</strong> <span id="cmtDate">-</span></div>
+<div><strong>รายการ:</strong> <span class="mono" id="cmtTarget">-</span></div>
+</div>
+<div style="margin-top:12px">
+<label class="inline" style="gap:8px"><input id="cmtDone" type="checkbox"/> งานนี้เสร็จแล้ว</label>
+</div>
+<div style="margin-top:10px">
+<label>ข้อความ (หากยังไม่เสร็จ ให้ระบุสาเหตุ/ปัญหา)</label>
+<textarea id="cmtNote" placeholder="พิมพ์คอมเม้นที่นี่..."></textarea>
+</div>
+<div class="inline" style="justify-content:flex-end;margin-top:12px">
+<button class="btn red" onclick="deleteComment()">ลบคอมเม้น</button>
+<button class="btn gray" onclick="cancelComment()">ยกเลิก</button>
+<button class="btn" onclick="saveComment()">บันทึก</button>
+</div>
+</div>
+</div>
+<!-- Viewer Modal -->
+<div class="modal" id="modal">
+<div class="top">
+<div class="toolbar">
+<strong id="mName">ตัวอย่างเอกสาร</strong>
+<span class="meta" id="mPos"></span>
+<div class="grow"></div>
+<button class="btn" id="mPrintWithQR" onclick="printWithQROverlay()">ปริ้นพร้อม QR</button>
+<button class="btn gray" id="mPrint" onclick="doPrint()">ปริ้นไฟล์เดิม</button>
+<button class="btn gray" id="mPrev" onclick="goPrev()">← ก่อนหน้า</button>
+<button class="btn gray" id="mNext" onclick="goNext()">ถัดไป →</button>
+<button class="btn" id="mClose" onclick="closePreview()">ปิด</button>
+</div>
+</div>
+<iframe id="viewer" src=""></iframe>
+</div>
+<script>
+// (removed broken IIFE)
+</script>
+<script>
+
+window.printWithQROverlay = async function(){
+  // ใช้ QR ที่แสดงอยู่ (qrCanvas) ถ้ายังไม่มีให้สร้างก่อน แล้วแปะลงบน PDF ปัจจุบัน
+  await ensurePDF(); await ensureQR();
+  
+  // ---- Resolve target PDF file robustly (without relying solely on helper) ----
+  let file = null;
+  try{
+    // A) Preferred: use live globals
+    if (typeof viewFiles !== 'undefined' && viewFiles.length){
+      if (typeof currentIdx === 'number' && currentIdx >= 0 && currentIdx < viewFiles.length) file = viewFiles[currentIdx];
+      else file = viewFiles[0];
+    }
+    // B) If still not found, match by UI (first visible card)
+    if(!file){
+      const b = document.querySelector('[data-open]');
+      const uiName = b ? (b.getAttribute('data-open') || '').trim() : '';
+      const fi = document.getElementById('folder');
+      const raw = (fi && fi.files) ? Array.from(fi.files) : [];
+      if (uiName && raw.length){
+        const fx = raw.find(f => f.name === uiName);
+        if (fx) file = fx;
+      }
+      if(!file && raw.length){ file = raw[0]; }
+    }
+    // C) Fallback to preview blob (if modal preview was opened)
+    if(!file){
+      const v = document.getElementById('viewer');
+      if(v && typeof v.src === 'string' && v.src.startsWith('blob:')){
+        const blob = await fetch(v.src).then(r=>r.blob()).catch(()=>null);
+        if (blob){
+          try{ file = new File([blob], 'preview.pdf', {type: blob.type || 'application/pdf'}); }
+          catch(e){ file = blob; }
+        }
+      }
+    }
+    // D) Compatibility helper, if defined
+    if(!file && typeof getCurrentPDFFile === 'function'){ file = getCurrentPDFFile(); }
+  }catch(e){ /* swallow */ }
+  if(!file){ alert('ยังไม่พบไฟล์ที่จะพิมพ์\\n\\nโปรดเลือกโฟลเดอร์ PDF หรือกด ดูตัวอย่าง/ค้นหา ให้มีรายการแสดงก่อน'); return; }
+// ถ้า qrCanvas ยังว่าง ให้พยายามสร้างจากข้อมูลในหน้า
+  var qrCanvas = document.getElementById('qrCanvas');
+  if(!(qrCanvas && qrCanvas.width > 0)){
+    if(typeof makeQR === 'function'){ 
+      var ok = await makeQR(); 
+      qrCanvas = document.getElementById('qrCanvas');
+      if(!ok || !(qrCanvas && qrCanvas.width>0)){
+        alert('ยังไม่มี QR บนหน้า — กด "สร้าง/อัปเดต QR" ก่อน แล้วลองอีกครั้ง'); 
+        return; 
+      }
+    }else{
+      alert('ยังไม่มี QR บนหน้า และไม่พบฟังก์ชันสร้าง QR'); 
+      return;
+    }
+  }
+
+  var qrW = (window.CFG && CFG.qrWidth) ? CFG.qrWidth : 120;
+  var offsetY = (window.CFG && CFG.offsetY != null) ? CFG.offsetY : 40;
+
+  // อ่านและเรนเดอร์ PDF ด้วย pdf.js
+  var buf = await file.arrayBuffer();
+  var pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  var images = [];
+  for (var i = 1; i <= Math.min(1, pdf.numPages); i++) {
+    var page = await pdf.getPage(i);
+    var viewport = page.getViewport({scale: 1.3});
+    var c = document.createElement('canvas');
+    var ctx = c.getContext('2d');
+    c.width = Math.floor(viewport.width);
+    c.height = Math.floor(viewport.height);
+    await page.render({canvasContext: ctx, viewport: viewport}).promise;
+
+    var w = qrW;
+    var x = Math.round((c.width - w)/2);
+    var y = Math.max(0, Math.round(offsetY));
+    ctx.drawImage(qrCanvas, x, y, w, w);
+
+    images.push(c.toDataURL('image/png'));
+  }
+
+  // เปิดหน้าต่างใหม่และพิมพ์ (สร้าง DOM ด้วย createElement เท่านั้น)
+  var w = window.open('', '_blank');
+  if(!w){ alert('เบราว์เซอร์บล็อกป๊อปอัป — โปรดอนุญาตชั่วคราว'); return; }
+  var doc = w.document;
+  doc.head.innerHTML = '';
+  var meta = doc.createElement('meta'); meta.setAttribute('charset','utf-8'); doc.head.appendChild(meta);
+  var title = doc.createElement('title'); title.textContent = 'พิมพ์พร้อม QR'; doc.head.appendChild(title);
+  var style = doc.createElement('style');
+  style.textContent = '@page{margin:0}' + ' html,body{margin:0;background:#fff}' + ' .page{display:block;}' + ' .page img{display:block;width:100%;height:auto}' + ' @media print{ .page{page-break-after:always;break-after:page} .page:last-child{page-break-after:auto;break-after:auto} }'
+                    + '@media print{ /* single page */ }';
+  style.innerHTML += '@page{size:auto;margin:0} html,body{margin:0;padding:0} img{display:block;page-break-inside:avoid}';
+    doc.head.appendChild(style);
+
+  images.forEach(function(src){ var d = doc.createElement('div'); d.className='page'; var im = doc.createElement('img'); im.src=src; d.appendChild(im); doc.body.appendChild(d);});
+
+  try{ w.focus(); }catch(e){}
+  setTimeout(function(){ try{ w.print(); }catch(e){} }, 500);
+};
+
+</script>
+<script>
+window.onPnoKey = function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); e.target.blur(); }
+};
+window.commitPno = function(el){
+  try{
+    var iso = el.getAttribute('data-iso')||'';
+    var id  = el.getAttribute('data-id')||'';
+    var val = (el.textContent||'').trim();
+    if(!iso || !id) return;
+    var store = (window.uploadStore && uploadStore.byDate && uploadStore.byDate[iso]) ? uploadStore.byDate[iso] : null;
+    if(!store) return;
+    var rows = Array.isArray(store.rows) ? store.rows : [];
+    var changed = false;
+    for(var i=0;i<rows.length;i++){
+      var r = rows[i];
+      var rid = (typeof primaryIdOfRow==='function') ? primaryIdOfRow(r) : '';
+      if(String(rid) === String(id)){
+        if(r['P/NO เป้าหมาย'] !== undefined) r['P/NO เป้าหมาย'] = val;
+        else if(r['P/NO'] !== undefined) r['P/NO'] = val;
+        else if(r['เป้าหมาย'] !== undefined) r['เป้าหมาย'] = val;
+        else r['P/NO เป้าหมาย'] = val;
+        changed = true;
+        break;
+      }
+    }
+    if(changed){ if(typeof saveStore==='function') saveStore(); if(typeof mirrorFromUpload==='function') mirrorFromUpload(); }
+  }catch(e){ console.warn('commitPno failed', e); }
+};
+</script><script>
+// === Persistent UI State (auto save/restore) ===
+(function(){
+  const KEY = 'uiState_v3';
+  const $ = (id)=>document.getElementById(id);
+  function read(){ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; } }
+  function write(s){ try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){} }
+
+  window.saveUiState = function(extra){
+    const s = read();
+    const d = $('date'), l = $('lineMain');
+    if(d) s.date = d.value;
+    if(l) s.line = l.value;
+    ['fileName','qr21','qr24','search'].forEach(id=>{ const el = $(id); if(el) s[id] = el.value; });
+    if(window.state && typeof state.listMode==='string') s.listMode = state.listMode;
+    if(window.state && typeof state.cmtFilter==='string') s.cmtFilter = state.cmtFilter;
+    const sc = document.querySelector('.mirror-scroller');
+    if(sc) s.mirrorScroll = { top: sc.scrollTop, left: sc.scrollLeft };
+    if(extra && typeof extra==='object') Object.assign(s, extra);
+    write(s);
+  };
+
+  window.restoreUiState = function(){
+    const s = read();
+    const d = $('date'), l = $('lineMain');
+    if(d && s.date) d.value = s.date;
+    if(l && s.line) l.value = s.line;
+
+    ['fileName','qr21','qr24','search'].forEach(id=>{
+      const el = $(id);
+      if(el && s[id] != null){
+        el.value = s[id];
+        try{ el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change')); }catch(e){}
+      }
+    });
+
+    if(typeof setListMode==='function' && s.listMode){ try{ setListMode(s.listMode); }catch(e){} }
+    if(window.state && s.cmtFilter){ state.cmtFilter = s.cmtFilter; }
+
+    // วาดตารางก่อน แล้วค่อยเลื่อนกลับตำแหน่งเดิม
+    if(typeof mirrorFromUpload==='function'){ try{ mirrorFromUpload(); }catch(e){} }
+    setTimeout(()=>{
+      const sc = document.querySelector('.mirror-scroller');
+      if(sc && s.mirrorScroll){ sc.scrollTop = s.mirrorScroll.top||0; sc.scrollLeft = s.mirrorScroll.left||0; }
+    }, 0);
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    restoreUiState();
+    ['date','lineMain','fileName','qr21','qr24','search'].forEach(id=>{
+      const el = $(id); if(!el) return;
+      el.addEventListener('change', saveUiState);
+      el.addEventListener('input',  saveUiState);
+    });
+    // ปุ่มโหมดแสดงรายการ และตัวกรองคอมเม้น
+    ['vAll','vOne','vHide'].forEach(id=>{ const b=$(id); if(b) b.addEventListener('click', saveUiState); });
+    document.body.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-cmt]');
+      if(btn && window.state){ state.cmtFilter = btn.getAttribute('data-cmt'); saveUiState(); }
+    });
+    // บันทึกตำแหน่งเลื่อนของตาราง
+    document.body.addEventListener('scroll', (e)=>{
+      const sc = document.querySelector('.mirror-scroller');
+      if(e.target===sc) saveUiState();
+    }, true);
+  });
+
+  window.addEventListener('beforeunload', saveUiState);
+})();
+</script><script>
+// === Export from visible table DOM so it always matches what user sees ===
+(function(){
+  function sanitizeCSV(v){ if(v==null) return ''; let s=String(v).replace(/\r?\n/g,' '); if(s.includes('"')||s.includes(',')||s.includes('\n')) s='"'+s.replace(/"/g,'""')+'"'; return s; }
+  function headerOrder(){ return ['P/NO เป้าหมาย','Trim','Cut-file','สถานะ','Materials','จำนวนครั้ง','จำนวนที่ตัดได้(ชิ้น)','_d','วันและเวลา','รายงาน']; }
+  
+  function collectRows(){
+  const box = document.getElementById('mirrorBox');
+  const tbl = box && box.querySelector('table');
+  if(!tbl) return [];
+
+  // --- ใช้ลำดับคอลัมน์คงที่ให้ตรงกับ UI ---
+  // 0:P/NO, 1:Trim, 2:Cut-file, 3:สถานะ, 4:Materials, 5:จำนวนครั้ง, 6:จำนวนที่ตัดได้(ชิ้น), 7:_d, 8:วันและเวลา, 9:รายการงาน
+  const FIX = {PNO:0, Trim:1, Cut:2, Stat:3, Mat:4, Times:5, Pieces:6, D:7, TS:8, Job:9};
+  const trs = Array.from(tbl.querySelectorAll('tbody tr'));
+  const rows = [];
+
+  trs.forEach(tr=>{
+    const tds = tr.querySelectorAll('td');
+    const txt = i => { const td = tds[i]; if(!td) return ''; const s = td.querySelector('.val'); const t = s ? s.innerText : td.innerText; return String(t||'').trim(); };
+
+    let ts = txt(FIX.TS);
+    // fallback เวลาจากคอมเม้นถ้าเซลล์ว่าง
+    if(!ts){
+      const key = tr.getAttribute('data-rowkey') || '';
+      const cm  = (window.comments||{})[key];
+      if(cm){
+        if(Array.isArray(cm.logs) && cm.logs.length){ ts = fmtDateTime(cm.logs[cm.logs.length-1]); }
+        else if(cm.ts){ ts = fmtDateTime(cm.ts); }
+      }
+    }
+
+    rows.push({
+      'P/NO เป้าหมาย': txt(FIX.PNO),
+      'Trim': txt(FIX.Trim),
+      'Cut-file': txt(FIX.Cut),
+      'สถานะ': txt(FIX.Stat),
+      'Materials': txt(FIX.Mat),
+      'จำนวนครั้ง': txt(FIX.Times),
+      'จำนวนที่ตัดได้(ชิ้น)': txt(FIX.Pieces),
+      '_d': txt(FIX.D),
+      'วันและเวลา': ts,
+      'รายงาน': txt(FIX.Job)
+    });
+  });
+  return rows;
+}window.exportCSV_fromDom = function(){
+    const rows = collectRows(); if(!rows.length){ alert('ยังไม่มีข้อมูลในตาราง'); return; }
+    const hdrs = headerOrder(); const lines=[hdrs.map(sanitizeCSV).join(',')];
+    rows.forEach(o=> lines.push(hdrs.map(h=>sanitizeCSV(o[h]==null?'':o[h])).join(',')));
+    const iso = (document.getElementById('date')||{}).value||'';
+    const line = (document.getElementById('lineMain')||{}).value||'';
+    const a=document.createElement('a'); a.download='export-filter-'+(iso||'')+(line?('-'+line):'')+'.csv';
+    a.href=URL.createObjectURL(new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'})); document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
+  };
+  window.exportXLS_fromDom = function(){
+    const rows = collectRows(); if(!rows.length){ alert('ยังไม่มีข้อมูลในตาราง'); return; }
+    const hdrs = headerOrder(); let html='<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\" style=\"border-collapse:collapse\">';
+    html+='<thead><tr>'+hdrs.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>';
+    rows.forEach(o=>{ html+='<tr>'+hdrs.map(h=>'<td>'+String(o[h]==null?'':o[h]).replace(/[<>&]/g,s=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]))+'</td>').join('')+'</tr>'; });
+    html+='</tbody></table>';
+    const iso = (document.getElementById('date')||{}).value||'';
+    const line = (document.getElementById('lineMain')||{}).value||'';
+    const a=document.createElement('a'); a.download='export-filter-'+(iso||'')+(line?('-'+line):'')+'.xls';
+    a.href=URL.createObjectURL(new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'})); document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
+  };
+})();
+</script><script>
+// === Mini Calendar (binds to #date + #lineMain) ===
+(function(){
+  function pad(n){ return (n<10?'0':'')+n; }
+  function parseISO(s){
+    if(!s) return null;
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  }
+  function formatISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function labelMonth(d){ return d.toLocaleDateString('th-TH', { year:'numeric', month:'long' }); }
+
+  function hasDataForDay(year, month, day, line){
+    try{
+      const iso = year+'-'+pad(month+1)+'-'+pad(day);
+      const key = iso + '|' + (line||'');
+      const rec = (window.uploadStore && uploadStore.byDate && (uploadStore.byDate[key] || uploadStore.byDate[iso]));
+      if(rec && Array.isArray(rec.rows) && rec.rows.length>0) return true;
+      return false;
+    }catch(e){ return false; }
+  }
+
+  function renderCalendar(){
+    const box = document.getElementById('calendarBox');
+    if(!box) return;
+    const dateEl = document.getElementById('date');
+    const lineEl = document.getElementById('lineMain');
+    const line = lineEl ? lineEl.value : '';
+
+    // determine month to show
+    let base = parseISO(dateEl && dateEl.value);
+    const now = new Date();
+    if(!base) base = new Date(now.getFullYear(), now.getMonth(), 1);
+    const first = new Date(base.getFullYear(), base.getMonth(), 1);
+    const last = new Date(base.getFullYear(), base.getMonth()+1, 0);
+    const selectedISO = dateEl && dateEl.value ? dateEl.value : '';
+
+    // Build DOM
+    const wrap = document.createElement('div'); wrap.className='cal';
+    // head
+    const head = document.createElement('div'); head.className='cal-head';
+    const nav = document.createElement('div'); nav.className='nav';
+    const btnPrev = document.createElement('button'); btnPrev.textContent='← เดือนก่อน';
+    const btnNext = document.createElement('button'); btnNext.textContent='เดือนถัดไป →';
+    nav.appendChild(btnPrev); nav.appendChild(btnNext);
+    const lbl = document.createElement('div'); lbl.className='label'; lbl.textContent = labelMonth(first);
+    head.appendChild(lbl); head.appendChild(nav);
+    wrap.appendChild(head);
+    // days
+    const days = document.createElement('div'); days.className='days';
+    for(let d=1; d<=last.getDate(); d++){
+      const iso = first.getFullYear()+'-'+pad(first.getMonth()+1)+'-'+pad(d);
+      const b = document.createElement('button');
+      b.type='button';
+      b.className='day';
+      if(selectedISO===iso) b.classList.add('active');
+      const ok = hasDataForDay(first.getFullYear(), first.getMonth(), d, line);
+      if(!ok) b.classList.add('empty');
+      b.textContent=String(d);
+      b.addEventListener('click', function(){
+        const el = document.getElementById('date');
+        if(el){ el.value = iso; try{ el.dispatchEvent(new Event('change')); }catch(e){} }
+        try{ if(typeof saveUiState==='function') saveUiState({}); }catch(e){}
+        // re-render to update "active" highlight
+        renderCalendar();
+      });
+      days.appendChild(b);
+    }
+    wrap.appendChild(days);
+
+    // legend
+    const leg = document.createElement('div'); leg.className='legend';
+    leg.innerHTML = '<span class="chip"><span class="demo"></span>มีข้อมูลอัปโหลด</span>' +
+                    '<span class="chip"><span class="demo none"></span>ยังไม่มีข้อมูล</span>';
+    wrap.appendChild(leg);
+
+    box.innerHTML=''; box.appendChild(wrap);
+
+    btnPrev.addEventListener('click', function(){
+      const cur = parseISO(selectedISO) || first;
+      const prev = new Date(first.getFullYear(), first.getMonth()-1, 1);
+      // keep same day if possible
+      const keep = new Date(prev.getFullYear(), prev.getMonth(), Math.min(cur.getDate(), new Date(prev.getFullYear(), prev.getMonth()+1, 0).getDate()));
+      if(dateEl){ dateEl.value = formatISO(keep); try{ dateEl.dispatchEvent(new Event('change')); }catch(e){} }
+      renderCalendar();
+    });
+    btnNext.addEventListener('click', function(){
+      const cur = parseISO(selectedISO) || first;
+      const next = new Date(first.getFullYear(), first.getMonth()+1, 1);
+      const keep = new Date(next.getFullYear(), next.getMonth(), Math.min(cur.getDate(), new Date(next.getFullYear(), next.getMonth()+1, 0).getDate()));
+      if(dateEl){ dateEl.value = formatISO(keep); try{ dateEl.dispatchEvent(new Event('change')); }catch(e){} }
+      renderCalendar();
+    });
+  }
+
+  // render on load & when inputs change
+  document.addEventListener('DOMContentLoaded', renderCalendar);
+  document.addEventListener('change', function(e){
+    const id = (e.target&&e.target.id)||'';
+    if(id==='date' || id==='lineMain'){ renderCalendar(); }
+  });
+  // also when upload store changes (after adding data), hook into renderStoreList if exists
+  const origRenderStoreList = window.renderStoreList;
+  if(typeof origRenderStoreList === 'function'){
+    window.renderStoreList = function(){ origRenderStoreList.apply(this, arguments); try{ renderCalendar(); }catch(e){} };
+  }
+  window.renderCalendar = renderCalendar;
+})();
+</script><style>#calendarBox + h1, #calendarBox + h2, #calendarBox + h3, #calendarBox + h4 { margin-top: 10px; display:block;}</style><style>
+/* calendar sits on top of the whole production block */
+#calendarBox{margin-bottom:12px;}
+</style>
+<style id="layout-v5-desktop-2col">
+/* Desktop: switch to two-column grid, left narrow, right wide (match screenshot) */
+@media (min-width: 981px){
+  #pageMain .grid-main{
+    grid-template-columns: clamp(360px, 34%, 520px) 1fr !important;
+    grid-auto-rows: minmax(100px, auto);
+    align-items: start;
+  }
+  #pageMain .grid-main .card{
+    margin: 0; /* tighter like screenshot */
+  }
+  /* visual polish closer to screenshot */
+  #pageMain .card{
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    border: 1px solid #e2e8f0;
+  }
+  #pageMain h3.title{
+    gap: 8px;
+  }
+}
+/* Mobile: reset any forced grid placement */
+@media (max-width: 980px){
+  #cardFolder,#cardQR,#cardProduction{
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+}
+</style>
+<script id="layout-v5-place-cards">
+// === Layout v5 (match screenshot) ===
+// Desktop: two-column grid. Left column (row1=📁, row2=📝). Right column = 🧰 spanning two rows.
+(function(){
+  function findCard(icon){
+    return Array.from(document.querySelectorAll('#pageMain .grid-main > .card')).find(function(card){
+      var h = card.querySelector('h3.title');
+      return h && h.textContent && h.textContent.indexOf(icon) !== -1;
+    }) || null;
+  }
+  function applyLayoutV5(){
+    var grid = document.querySelector('#pageMain .grid-main');
+    if(!grid) return;
+    var cardFolder = findCard('📁');
+    var cardQR     = findCard('📝');
+    var cardProd   = findCard('🧰');
+    if(!(cardFolder && cardQR && cardProd)) return;
+
+    // Source order for accessibility and keyboard nav
+    grid.appendChild(cardFolder);
+    grid.appendChild(cardQR);
+    grid.appendChild(cardProd);
+
+    // Stable ids
+    cardFolder.id = cardFolder.id || 'cardFolder';
+    cardQR.id     = cardQR.id     || 'cardQR';
+    cardProd.id   = cardProd.id   || 'cardProduction';
+
+    // Desktop placement (mobile will stack naturally)
+    cardFolder.style.gridColumn = '1';
+    cardFolder.style.gridRow = '1';
+    cardQR.style.gridColumn = '1';
+    cardQR.style.gridRow = '2';
+    cardProd.style.gridColumn = '2';
+    cardProd.style.gridRow = '1 / span 2';
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyLayoutV5);
+  }else{
+    applyLayoutV5();
+  }
+  // Re-apply when returning to main tab
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('#tabMain');
+    if(b){ setTimeout(applyLayoutV5, 0); }
+  });
+})();
+</script>
+
+
+<script>
+/* === Production QR logger with aggressive caching for qr21/qr24 === */
+(function(){
+  const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwyn2HFclAjEQs72g84eqo5r9hhxUTdQ6Z4JbvFCarFBSbLv6qyta5oFcz6f0qM5Wv-UA/exec';
+  const SHEET   = '';
+  const QKEY    = 'pdfqr_print_log_queue_v1';
+  const DEDUPE  = 'pdfqr_last_payload_hash_v5';
+
+  // cache
+  window.__qrCache = window.__qrCache || { qr21:'', qr24:'' };
+
+  function get(id){ return document.getElementById(id) || null; }
+  function val(el){ return el ? String((el.value!==undefined ? el.value : '')).trim() : ''; }
+  function attrVal(el){ return el ? String(el.getAttribute('value')||'').trim() : ''; }
+  function text(el){ return el ? String((el.textContent||'')).trim() : ''; }
+
+  function clean(s){ return (s||'').trim(); }
+  function isMeaningful(s){ return !!clean(s); }
+
+  function updateCacheFromDom(){
+    const v21 = val(get('qr21')) || attrVal(get('qr21'));
+    const v24 = val(get('qr24')) || attrVal(get('qr24'));
+    if(isMeaningful(v21)) window.__qrCache.qr21 = v21;
+    if(isMeaningful(v24)) window.__qrCache.qr24 = v24;
+  }
+
+  function bindInputs(){
+    const i21 = get('qr21'), i24 = get('qr24');
+    if(i21){
+      ['input','change','keyup','blur'].forEach(ev => i21.addEventListener(ev, () => {
+        const v = val(i21);
+        if(isMeaningful(v)) window.__qrCache.qr21 = v;
+      }, {passive:true}));
+    }
+    if(i24){
+      ['input','change','keyup','blur'].forEach(ev => i24.addEventListener(ev, () => {
+        const v = val(i24) || attrVal(i24);
+        if(isMeaningful(v)) window.__qrCache.qr24 = v;
+      }, {passive:true}));
+    }
+  }
+
+  function wrapQRHandlers(){
+    // wrap onQR21/onQR24 if present so cache updates when they run
+    ['onQR21','onQR24'].forEach(fnName => {
+      const orig = window[fnName];
+      if(typeof orig === 'function' && !orig.__wrapped){
+        window[fnName] = function(){
+          try{ const r = orig.apply(this, arguments); updateCacheFromDom(); return r; }
+          finally{ updateCacheFromDom(); }
+        };
+        window[fnName].__wrapped = true;
+      }
+    });
+  }
+
+  function hash(obj){
+    try{ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).slice(0,64); }
+    catch(_){ return String(Math.random()); }
+  }
+  function qPush(row){
+    try{ const q = JSON.parse(localStorage.getItem(QKEY)||'[]'); q.push(row); localStorage.setItem(QKEY, JSON.stringify(q)); }catch(e){}
+  }
+  async function qFlush(){
+    try{
+      const q = JSON.parse(localStorage.getItem(QKEY)||'[]');
+      if(!Array.isArray(q)||!q.length) return;
+      await fetch(WEBHOOK, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({sheet:SHEET, rows:q})}).catch(()=>null);
+      localStorage.removeItem(QKEY);
+    }catch(e){}
+  }
+
+  
+  // Return local time in ISO 8601 with timezone offset, e.g. 2025-09-23T15:30:00+07:00
+  function localISO(d){
+    d = d ? new Date(d) : new Date();
+    const tzo = -d.getTimezoneOffset(); // minutes east of UTC
+    const sign = tzo >= 0 ? '+' : '-';
+    const pad = (n) => String(Math.floor(Math.abs(n))).padStart(2,'0');
+    const off = sign + pad(tzo/60) + ':' + pad(tzo%60);
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth()+1);
+    const dd = pad(d.getDate());
+    const HH = pad(d.getHours());
+    const MM = pad(d.getMinutes());
+    const SS = pad(d.getSeconds());
+    return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}${off}`;
+  }
+function collect(){
+    updateCacheFromDom();
+    const qr21Dom = val(get('qr21')) || attrVal(get('qr21'));
+    const qr24Dom = val(get('qr24')) || attrVal(get('qr24'));
+    const qr21 = isMeaningful(qr21Dom) ? qr21Dom : (window.__qrCache.qr21 || '');
+    const qr24 = isMeaningful(qr24Dom) ? qr24Dom : (window.__qrCache.qr24 || '');
+    const fileName = val(get('fileName')) || val(document.querySelector('#qrBox input[type="text"]')) || '';
+    return {
+      timestamp: localISO(),
+      date_display: (get('date')||{}).value || '',
+      line: (get('lineMain')||{}).value || '',
+      fileName, qr21, qr24,
+      user_agent: navigator.userAgent || ''
+    };
+  }
+
+  async function sendOnce(){
+    const data = collect();
+    const h = hash(data);
+    if(localStorage.getItem(DEDUPE) === h) return;
+    localStorage.setItem(DEDUPE, h);
+    qPush(data);
+    await qFlush();
+  }
+
+  document.addEventListener('click', function(ev){
+    const btn = ev.target.closest && ev.target.closest('button, a');
+    if(!btn) return;
+    const t = (btn.textContent||'').replace(/\s+/g,' ').trim();
+    if(/ปริ้น.*QR|QR.*ปริ้น/i.test(t)) { sendOnce(); }
+  }, true);
+
+  window.addEventListener('DOMContentLoaded', function(){
+    bindInputs();
+    wrapQRHandlers();
+    updateCacheFromDom();
+  });
+  window.addEventListener('focus', qFlush);
+  window.addEventListener('online', qFlush);
+})();
+</script>
+
+
+
+
+
+<script>
+/* ==== UploadLog: บันทึกประวัติจากหน้า "อัปโหลดข้อมูล" ไป Google Sheet ==== */
+(function(){
+  const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwyn2HFclAjEQs72g84eqo5r9hhxUTdQ6Z4JbvFCarFBSbLv6qyta5oFcz6f0qM5Wv-UA/exec';
+  const SHEET_UPLOAD = 'UploadLog_clean';
+
+  function localISO(d){
+    try{
+      d = d ? new Date(d) : new Date();
+      const tzo = -d.getTimezoneOffset();
+      const sign = tzo >= 0 ? '+' : '-';
+      const pad = n => String(Math.floor(Math.abs(n))).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${pad(tzo/60)}:${pad(tzo%60)}`;
+    }catch(_){ return new Date().toISOString(); }
+  }
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function $all(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function val(el){ return el ? String((el.value!==undefined?el.value:'')).trim() : ''; }
+  function txt(el){ return el ? String((el.textContent||'')).trim() : ''; }
+
+  
+
+function parseUploadPanel(){
+  const box = document.getElementById('pageUpload') || document;
+  // date
+  const dateInput = box.querySelector('input[type="date"], input[placeholder*="mm/dd"], input[type="text"]');
+  let date_display = dateInput ? String(dateInput.value||'').trim() : '';
+
+  // line
+  let line = '';
+  const lineSel = box.querySelector('select');
+  if(lineSel) line = String(lineSel.value||'').trim();
+
+  // file name detection (aggressive)
+  let file_name = '';
+
+  // A) direct from file input (most reliable when a file is chosen now)
+  const fileInput = box.querySelector('input[type="file"]');
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    file_name = fileInput.files[0].name;
+  }
+
+  // B) scan visible text for last-looking filename
+  if (!file_name) {
+    const txt = (box.innerText || document.body.innerText || '').replace(/\s+/g,' ');
+    // We'll collect all candidates that look like filename with extension
+    const rxAll = /([^\s\/\\]+?\.(?:xlsx|xls|csv|json))/gi;
+    let m;
+    while((m = rxAll.exec(txt))){
+      // exclude obvious UA tokens like "Edg/140.0.0.0" etc by filtering short tokens with '/'
+      const cand = m[1];
+      if (!/\/|\//.test(cand)) file_name = cand; // keep last
+    }
+  }
+
+  // C) scan attribute hints
+  if (!file_name) {
+    const cand = box.querySelector('[data-file],[data-filename]');
+    if (cand) file_name = (cand.getAttribute('data-file') || cand.getAttribute('data-filename') || '').trim();
+  }
+
+  return { date_display, line, file_name, rows_added: '' };
+}
+async function sendUploadLog(){
+    const {date_display, line, file_name, rows_added} = parseUploadPanel();
+    
+    const payload = [{
+      timestamp: localISO(),
+      date_display: date_display || '',
+      line: line || '',
+      file_name: file_name || ''
+    }];
+
+    try{
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'text/plain'},
+        body: JSON.stringify({ sheet: SHEET_UPLOAD, rows: payload })
+      });
+      console.log('ส่ง UploadLog:', payload[0]);
+      alert('บันทึก UploadLog แล้ว');
+    }catch(e){
+      console.error(e);
+      alert('บันทึก UploadLog ไม่สำเร็จ');
+    }
+  }
+
+  function injectUploadButton(){
+    const box = document.getElementById('pageUpload');
+    if(!box) return;
+    // หา toolbar บริเวณปุ่ม "ล้างหน้านี้"
+    const buttons = Array.from(box.querySelectorAll('button, a.btn, .btn'));
+    const clearBtn = buttons.find(b => /ล้างหน้าที่|ล้างหน้านี้/i.test(txt(b)));
+    const host = clearBtn ? clearBtn.parentElement : box;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'บันทึกชื่อไฟล์';
+    btn.style.cssText = 'margin-left:8px;background:#22c55e;border:0;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;';
+    btn.addEventListener('click', sendUploadLog);
+    if(clearBtn && clearBtn.nextSibling){
+      clearBtn.parentElement.insertBefore(btn, clearBtn.nextSibling);
+    }else{
+      host.appendChild(btn);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', injectUploadButton);
+})();
+</script>
+
+
+
+
+
+<!-- ==== Begin: LineDailyLog Password-Locked Export (by ChatGPT) ==== -->
+<style>
+  /* Modal */
+  #ldl-pass-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 9999; }
+  #ldl-pass-modal { background: #fff; width: clamp(280px, 90vw, 420px); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.2); overflow: hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; }
+  #ldl-pass-modal header { padding: 14px 16px; font-weight: 600; background: #0ea5e9; color: #fff; }
+  #ldl-pass-modal .body { padding: 16px; }
+  #ldl-pass-modal .row { display: flex; gap: 10px; align-items: center; }
+  #ldl-pass-modal input[type="password"] { flex: 1; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; outline: none; }
+  #ldl-pass-modal footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px 16px; }
+  #ldl-pass-modal button { border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+  #ldl-btn-cancel { background: #e5e7eb; }
+  #ldl-btn-confirm { background: #0ea5e9; color: #fff; }
+
+  /* Icon button */
+  .ldl-locked-btn {
+    /* LineDailyLog icon button */
+    position: relative;
+    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 9999px;
+    border: 0;
+    background: #0ea5e9;
+    color: #fff;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  .ldl-locked-btn:hover { filter: brightness(0.95); }
+  .ldl-locked-btn[disabled] { opacity: .6; cursor: not-allowed; }
+  .ldl-locked-btn svg { width: 20px; height: 20px; }
+
+  /* small remaining badge */
+  .ldl-badge {
+    position: absolute; right: -3px; top: -3px;
+    min-width: 18px; height: 18px;
+    padding: 0 4px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 9999px;
+    font-size: 11px; line-height: 18px; text-align: center;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  /* subtle tooltip using title attribute handled by browser */
+
+  /* Generic toolbar icon buttons */
+  .toolbar-icon-btn {
+    position: relative;
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #111827;
+    cursor: pointer;
+    margin-right: 6px;
+  }
+  .toolbar-icon-btn:hover { background: #f3f4f6; }
+  .toolbar-icon-btn svg { width: 18px; height: 18px; }
+
+</style>
+
+<div id="ldl-pass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ldl-pass-title">
+  <div id="ldl-pass-modal">
+    <header id="ldl-pass-title">ใส่รหัสเพื่อส่งออกไปชีต (LineDailyLog)</header>
+    <div class="body">
+      <div class="row">
+        <label for="ldl-pass-input">รหัส:</label>
+        <input id="ldl-pass-input" type="password" placeholder="กรอกรหัส" autocomplete="off" />
+      </div>
+      <p id="ldl-pass-msg" style="color:#b91c1c; margin-top:8px; display:none;">รหัสไม่ถูกต้อง</p>
+    </div>
+    <footer>
+      <button id="ldl-btn-cancel" type="button">ยกเลิก</button>
+      <button id="ldl-btn-confirm" type="button">ยืนยัน</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const REQUIRED_PASS = '12345';
+  const STORAGE_KEY   = 'LDL_UNLOCKED_V1';
+  const STORAGE_REMAIN= 'LDL_UNLOCK_REMAIN_V1';
+  const MAX_UNLOCK_USES = 3; // configurable
+  const SHEET_NAME    = 'LineDailyLog';
+
+  const $text = el => el ? String((el.textContent||'')).trim() : '';
+
+  // ===== helpers for data extraction =====
+  function localISO(d){
+    try{
+      d = d ? new Date(d) : new Date();
+      const tzo = -d.getTimezoneOffset();
+      const sign = tzo >= 0 ? '+' : '-';
+      const pad = n => String(Math.floor(Math.abs(n))).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${pad(tzo/60)}:${pad(tzo%60)}`;
+    }catch(_){ return new Date().toISOString(); }
+  }
+  function findLineTable(){
+    const tables = Array.from(document.querySelectorAll('table'));
+    for(const tb of tables){
+      const header = Array.from(tb.querySelectorAll('thead th')).map(t => $text(t)).join('|');
+      if(/P\/?NO|Trim|Cut-?file|สถานะ|Materials/i.test(header)) return tb;
+    }
+    return null;
+  }
+  function normalizeKey(s){
+    s = (s||'').trim();
+    const map = {'P/NO เป้าหมาย':'pno','P/NO':'pno','เป้าหมาย':'pno','Trim':'trim','Cut-file':'cut_file','สถานะ':'status','Materials':'materials','จำนวนครั้ง':'times','จำนวนที่ตัดได้(ชิ้น)':'qty_cut','_d':'d','วันและเวลา':'when'};
+    return map[s] || s.replace(/\s+/g,'_').toLowerCase();
+  }
+  function extractLineRows(){
+    const table = findLineTable();
+    if(!table) return [];
+    const heads = Array.from(table.querySelectorAll('thead th')).map(th => normalizeKey($text(th)));
+    const rows = [];
+    for(const tr of Array.from(table.querySelectorAll('tbody tr'))){
+      const tds = Array.from(tr.querySelectorAll('td'));
+      if(!tds.length) continue;
+      const row = {};
+      heads.forEach((k, i) => row[k] = $text(tds[i]));
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // ===== storage =====
+  function isUnlocked(){ try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch(_){ return false; } }
+  function getRemain(){ try { return parseInt(localStorage.getItem(STORAGE_REMAIN)||'0', 10) || 0; } catch(_){ return 0; } }
+  function setUnlocked(v, resetRemain=false){
+    try {
+      localStorage.setItem(STORAGE_KEY, v ? '1' : '');
+      if(v){
+        if(resetRemain || getRemain()<=0){
+          localStorage.setItem(STORAGE_REMAIN, String(MAX_UNLOCK_USES));
+        }
+      }else{
+        localStorage.setItem(STORAGE_REMAIN, '0');
+      }
+    } catch(_){}
+  }
+  function setRemain(n){ try { localStorage.setItem(STORAGE_REMAIN, String(Math.max(0, n|0))); } catch(_){ } }
+
+  // ===== UI =====
+  function iconLocked(){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 10-8 0v2H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-7-2a2 2 0 114 0v2h-4V7z"></path></svg>';
+  }
+  function iconSheet(){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 7h5V3.5L18.5 9H8v8h8v2H8a1 1 0 01-1-1V8a1 1 0 011-1z"></path></svg>';
+  }
+
+  function updateButtonIcon(){
+    const btn = document.getElementById('ldl-locked-export-btn');
+    if(!btn) return;
+    // Clear previous content
+    btn.innerHTML = isUnlocked() ? iconSheet() : iconLocked();
+    btn.title = isUnlocked() ? 'ส่งออกไปชีต (คลิกเพื่อส่ง)' : 'ใส่รหัสเพื่อส่งออกไปชีต';
+    // Badge show remain
+    if(isUnlocked()){
+      const remain = getRemain();
+      if(remain > 0){
+        const badge = document.createElement('span');
+        badge.className = 'ldl-badge';
+        badge.textContent = String(remain);
+        btn.appendChild(badge);
+      }
+    }
+  }
+
+  function relock(){
+    setUnlocked(false);
+    updateButtonIcon();
+    const btn = document.getElementById('ldl-locked-export-btn');
+    if(btn){ btn.disabled = false; }
+  }
+
+  async function sendLineLog(){
+    const btn = document.getElementById('ldl-locked-export-btn');
+    if(btn) btn.disabled = true;
+
+    const rowsRaw = extractLineRows();
+    if(!rowsRaw.length){ if(btn) btn.disabled = false; alert('ไม่พบตารางข้อมูลการผลิตเพื่อส่งออก'); return; }
+
+    const payloadRows = rowsRaw.map(r => ({
+      timestamp: localISO(),
+      date_display: (document.getElementById('date')||{}).value || '',
+      line: (document.getElementById('lineMain')||{}).value || '',
+      pno: r.pno || '',
+      trim: r.trim || '',
+      cut_file: r.cut_file || '',
+      status: r.status || '',
+      materials: r.materials || '',
+      times: r.times || '',
+      qty_cut: r.qty_cut || '',
+      when: r.when || r['วันและเวลา'] || ''
+    }));
+
+    const WEBHOOK = window.LINE_DAILYLOG_WEBHOOK || (window.LINE_DAILYLOG?.WEBHOOK) || 'https://script.google.com/macros/s/AKfycbwyn2HFclAjEQs72g84eqo5r9hhxUTdQ6Z4JbvFCarFBSbLv6qyta5oFcz6f0qM5Wv-UA/exec';
+    try{
+      await fetch(WEBHOOK, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sheet: 'LineDailyLog', rows: payloadRows }) });
+      alert('ส่งข้อมูลไปชีต "LineDailyLog" แล้ว ('+payloadRows.length+' แถว)');
+      // consume one remain
+      let remain = getRemain();
+      remain = (remain>0 ? remain-1 : 0);
+      if(remain <= 0){ relock(); }
+      else{ setRemain(remain); if(btn) btn.disabled = false; updateButtonIcon(); }
+    }catch(e){
+      console.error(e);
+      alert('ส่งข้อมูลไม่สำเร็จ');
+      if(btn) btn.disabled = false;
+    }
+  }
+
+  function removeOriginalButtons(){
+    const candidates = Array.from(document.querySelectorAll('button, a.btn, .btn'));
+    for(const b of candidates){
+      const t = $text(b);
+      if(/ส่งออก\s*Sheet\s*\(LineDailyLog\)/i.test(t)){
+        if(b.id !== 'ldl-locked-export-btn'){ b.remove(); }
+      }
+    }
+  }
+
+  function injectLockedButton(){
+    if(document.getElementById('ldl-locked-export-btn')) return;
+    removeOriginalButtons();
+
+    const buttons = Array.from(document.querySelectorAll('button, a.btn, .btn'));
+    const excelBtn = buttons.find(b => /ส่งออก\s*Excel/i.test($text(b)));
+    const host = (excelBtn && excelBtn.parentElement) || (document.querySelector('.card-body, .toolbar, .filters, .container, main') || document.body);
+
+    const btn = document.createElement('button');
+    btn.id = 'ldl-locked-export-btn';
+    btn.type = 'button';
+    btn.className = 'ldl-locked-btn';
+    btn.setAttribute('aria-label', 'ส่งออก Sheet (LineDailyLog)');
+
+    btn.addEventListener('click', () => {
+      if(isUnlocked()){ sendLineLog(); }
+      else{ openModal(); }
+    });
+
+    if(excelBtn && excelBtn.nextSibling){
+      excelBtn.parentElement.insertBefore(btn, excelBtn.nextSibling);
+    }else{
+      host.appendChild(btn);
+    }
+    updateButtonIcon();
+  }
+
+  // Modal
+  const $backdrop = document.getElementById('ldl-pass-modal-backdrop');
+  const $input    = document.getElementById('ldl-pass-input');
+  const $msg      = document.getElementById('ldl-pass-msg');
+  const $btnOK    = document.getElementById('ldl-btn-confirm');
+  const $btnCancel= document.getElementById('ldl-btn-cancel');
+
+  function openModal(){ $msg.style.display='none'; $input.value=''; $backdrop.style.display='flex'; setTimeout(()=>{ $input.focus(); }, 50); }
+  function closeModal(){ $backdrop.style.display='none'; }
+  function tryConfirm(){
+    if(($input.value||'') !== REQUIRED_PASS){ $msg.style.display='block'; return; }
+    closeModal();
+    setUnlocked(true, /*resetRemain*/ true);
+    updateButtonIcon();
+  }
+
+  $btnOK.addEventListener('click', tryConfirm);
+  $btnCancel.addEventListener('click', closeModal);
+  $input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryConfirm(); if(e.key==='Escape') closeModal(); });
+  $backdrop.addEventListener('click', (e)=>{ if(e.target===$backdrop) closeModal(); });
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', injectLockedButton); }
+  
+  // ===== Toolbar: turn labeled buttons into icons =====
+  function icon(name){
+    switch(name){
+      case 'ทั้งหมด':      // list/bars
+        return '<svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>';
+      case 'ค้าง':         // clock
+        return '<svg viewBox="0 0 24 24"><path d="M12 1a11 11 0 1011 11A11.013 11.013 0 0012 1zm1 11H7v-2h4V5h2z"/></svg>';
+      case 'เสร็จแล้ว':    // check circle
+        return '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm-1 15l-5-5 1.41-1.41L11 14.17l6.59-6.58L19 9z"/></svg>';
+      case 'มีคอมแม้น':   // chat bubble
+        return '<svg viewBox="0 0 24 24"><path d="M2 3h20v14H6l-4 4V3z"/></svg>';
+      case 'สรุป':         // pie chart
+        return '<svg viewBox="0 0 24 24"><path d="M11 2v10H2A10 10 0 0011 2zm2 0a10 10 0 019.95 9H13V2zm-2 20A10 10 0 012 12h10v10z"/></svg>';
+      case 'ส่งออก CSV':   // file with arrow
+        return '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 14h3v3l4-4-4-4v3H8v2z"/></svg>';
+      case 'ส่งออก Excel': // spreadsheet
+        return '<svg viewBox="0 0 24 24"><path d="M19 2H8a2 2 0 00-2 2v3H5a1 1 0 00-1 1v10a2 2 0 002 2h13a1 1 0 001-1V3a1 1 0 00-1-1zM6 9h6v3H6V9zm0 4h6v3H6v-3zm7-4h6v3h-6V9zm0 4h6v3h-6v-3z"/></svg>';
+      case 'รีเฟรช':       // refresh
+        return '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6 5.96 5.96 0 014.24 1.76L14 10h8V2z"/></svg>';
+      default:
+        return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
+    }
+  }
+
+  function toIconButton(el, label){
+    // Preserve existing click handlers; just change appearance
+    el.classList.add('toolbar-icon-btn');
+    el.setAttribute('aria-label', label);
+    el.setAttribute('title', label);
+    el.innerHTML = icon(label);
+  }
+
+  function transformToolbarButtons(){
+    const targets = ['ทั้งหมด','ค้าง','เสร็จแล้ว','มีคอมแม้น','สรุป','ส่งออก CSV','ส่งออก Excel','รีเฟรช'];
+    const nodes = Array.from(document.querySelectorAll('button, a.btn, .btn'));
+    for(const node of nodes){
+      const txt = (node.textContent||'').trim();
+      const match = targets.find(t => new RegExp('^'+t+'\s*$', 'i').test(txt));
+      if(match){
+        // avoid transforming our LineDailyLog button
+        if(node.id === 'ldl-locked-export-btn') continue;
+        toIconButton(node, match);
+      }
+    }
+  }
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', () => { injectLockedButton(); transformToolbarButtons(); }); }
+  else{ injectLockedButton(); transformToolbarButtons(); }
+})();
+</script>
+
+<script>
+// === Toolbar Icons: keep-as-icons with MutationObserver (debounced re-apply) ===
+(function(){
+  function debounce(fn, ms){
+    let t; return function(){ clearTimeout(t); t=setTimeout(fn, ms||80); };
+  }
+  // We re-use/extend transformToolbarButtons if present, otherwise define it.
+  function ensureTransform(){
+    if(typeof window.transformToolbarButtons === 'function'){
+      try{ window.transformToolbarButtons(); }catch(e){}
+      return;
+    }
+    // Fallback minimal transformer (same target labels)
+    const targets = ['ทั้งหมด','ค้าง','เสร็จแล้ว','มีคอมแม้น','สรุป','ส่งออก CSV','ส่งออก Excel','รีเฟรช'];
+    const icon = (name)=>{
+      switch(name){
+        case 'ทั้งหมด': return '<svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>';
+        case 'ค้าง': return '<svg viewBox="0 0 24 24"><path d="M12 1a11 11 0 1011 11A11.013 11.013 0 0012 1zm1 11H7v-2h4V5h2z"/></svg>';
+        case 'เสร็จแล้ว': return '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm-1 15l-5-5 1.41-1.41L11 14.17l6.59-6.58L19 9z"/></svg>';
+        case 'มีคอมแม้น': return '<svg viewBox="0 0 24 24"><path d="M2 3h20v14H6l-4 4V3z"/></svg>';
+        case 'สรุป': return '<svg viewBox="0 0 24 24"><path d="M11 2v10H2A10 10 0 0011 2zm2 0a10 10 0 019.95 9H13V2zm-2 20A10 10 0 012 12h10v10z"/></svg>';
+        case 'ส่งออก CSV': return '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 14h3v3l4-4-4-4v3H8v2z"/></svg>';
+        case 'ส่งออก Excel': return '<svg viewBox="0 0 24 24"><path d="M19 2H8a2 2 0 00-2 2v3H5a1 1 0 00-1 1v10a2 2 0 002 2h13a1 1 0 001-1V3a1 1 0 00-1-1zM6 9h6v3H6V9zm0 4h6v3H6v-3zm7-4h6v3h-6V9zm0 4h6v3h-6v-3z"/></svg>';
+        case 'รีเฟรช': return '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6 5.96 5.96 0 014.24 1.76L14 10h8V2z"/></svg>';
+        default: return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
+      }
+    };
+    const iconize = (el,label)=>{
+      if(!el || el.dataset && el.dataset.iconized === '1') return;
+      el.classList.add('toolbar-icon-btn');
+      el.setAttribute('aria-label', label);
+      el.setAttribute('title', label);
+      el.innerHTML = icon(label);
+      el.dataset.iconized = '1';
+    };
+    const nodes = Array.from(document.querySelectorAll('button, a.btn, .btn'));
+    nodes.forEach(node=>{
+      if(node.id === 'ldl-locked-export-btn') return;
+      const text = (node.textContent||'').trim();
+      const hit = targets.find(t => new RegExp('^'+t+'\s*$', 'i').test(text));
+      if(hit) iconize(node, hit);
+    });
+  }
+
+  const apply = debounce(ensureTransform, 80);
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', apply, {once:true});
+  }else{
+    apply();
+  }
+
+  // Observe changes across the app (toolbar re-render, tab switch, etc.)
+  const obs = new MutationObserver(apply);
+  obs.observe(document.body, {childList:true, subtree:true});
+  window.__toolbarIconObserver = obs;
+})();
+</script>
+
+
+<script>
+// === Keep LineDailyLog icon button persistent ===
+(function(){
+  function ensureLDL(){
+    try{
+      if(!document.getElementById('ldl-locked-export-btn') && typeof injectLockedButton === 'function'){
+        injectLockedButton();
+      }
+    }catch(e){}
+  }
+  function debounce(fn, ms){ let t; return ()=>{ clearTimeout(t); t=setTimeout(fn, ms||80); }; }
+  const apply = debounce(ensureLDL, 60);
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', apply, {once:true}); }
+  else { apply(); }
+  const obs = new MutationObserver(apply);
+  obs.observe(document.body, {childList:true, subtree:true});
+  window.__ldlPersistObserver = obs;
+})();
+</script>
+
+<!-- ==== End: LineDailyLog Password-Locked Export (by ChatGPT) ==== -->
+
+
+
+</body>
+</html>
