@@ -23,11 +23,11 @@
   .span-all{grid-column:1 / -1}
   input,button,select{font:inherit}
   label{font-size:13px;color:#475467;display:block;margin:0 0 6px}
-  input,select{padding:10px 12px;border:1px solid #cfd5e1;border-radius:10px;outline:0;background:#fff}
+  input,select{padding:14px 16px;border:1px solid #cfd5e1;border-radius:10px;outline:0;background:#fff}
   input:focus,select:focus{border-color:#6b9cff;box-shadow:0 0 0 3px rgba(107,156,255,.25)}
   input:disabled{background:#f3f4f6;color:#94a3b8;cursor:not-allowed}
-  .btn{padding:10px 12px;border:0;border-radius:10px;background:var(--pri);color:#fff;cursor:pointer}
-  .btn.gray{background:#475569}
+  .btn{padding:14px 16px;border:0;border-radius:10px;background:var(--pri);color:#fff;cursor:pointer}
+  .btn.gray{background:#475569}      
   .row{display:grid;grid-template-columns:1fr 220px;gap:10px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -57,7 +57,7 @@
     .searchShort{flex:1 1 auto; min-width:240px; width:auto}
   }
   .seg{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:#fff}
-  .seg button{border:0;padding:8px 10px;background:transparent;cursor:pointer;font-size:12px;color:#334155}
+  .seg button{border:0;padding:12px 16px;background:transparent;cursor:pointer;font-size:12px;color:#334155}
   .seg button+button{border-left:1px solid var(--bd)}
   .seg .active{background:var(--pri);color:#fff}
   .searchShort{flex:0 0 360px; max-width:45vw}
@@ -73,7 +73,7 @@
   /* Upload page */
   .uploader{display:grid;gap:12px}
   table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
-  th,td{font-size:13px;border-bottom:1px solid var(--bd);padding:8px 10px;text-align:left}
+  th,td{font-size:13px;border-bottom:1px solid var(--bd);padding:12px 16px;text-align:left}
   tbody tr:hover{background:#f8fafc;cursor:pointer}
   .hint{font-size:12px;color:#64748b}
   .passmodal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.65);z-index:60}
@@ -115,6 +115,91 @@
     z-index: 5;
     box-shadow: inset 0 -1px 0 #e2e8f0;
   }
+
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === SEARCH FIELD STATUS === */
+#search.valid {
+  border: 2px solid #16a34a !important;
+  background: #ecfdf5;
+}
+#search.invalid {
+  border: 2px solid #dc2626 !important;
+  background: #fef2f2;
+  animation: shake 0.25s linear 2;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
 
 </style>
 <script>
@@ -272,7 +357,14 @@
     checkMatch(true,false);
   }
   function onQR21(){
-    const v=$('qr21').value;
+    // บังคับ Roll เป็นตัวพิมพ์ใหญ่ (Uppercase) อัตโนมัติ
+    let v = $('qr21').value;
+    const upper = v.toUpperCase();
+    if(v !== upper){
+      $('qr21').value = upper;
+      v = upper;
+    }
+
     if(v.length===21){
       const cut=v.substring(14,16); $('last2').value=cut; $('s_21').textContent='✅ สกัด “'+cut+'” จากตำแหน่ง 15-16'; $('s_21').className='status ok';
       state.requireScan21=false;
@@ -281,75 +373,68 @@
     else{ $('s_21').textContent='❌ เกิน 21 ตัวอักษร ('+v.length+')'; $('s_21').className='status bad'; setInfo2Enabled(false,false); }
   }
   function onQR24(){
-    const vRaw=$('qr24').value; const v=vRaw.replace(/\s/g,'');
-    if(v!==vRaw){ $('qr24').value=v; }
-    if(v.length===24){
-      $('s_24').textContent='✅ ได้ครบ 24 ตัวอักษร'; $('s_24').className='status ok';
+    // บังคับ RF เป็นตัวพิมพ์ใหญ่ และต้องยาว = 24 ตัวอักษรเท่านั้น
+    let vRaw = $('qr24').value;
+    // ลบช่องว่าง + แปลงเป็นตัวพิมพ์ใหญ่
+    let v = vRaw.replace(/\s/g,'').toUpperCase();
+    if(v !== vRaw){ $('qr24').value = v; }
+
+    if(v.length === 24){
+      $('s_24').textContent='✅ RF ถูกต้อง (24 ตัวอักษร)';
+      $('s_24').className='status ok';
       if(CFG.autoBuild){ makeQR(); }
-    }else if(v.length<24){ $('s_24').textContent='⏳ '+v.length+'/24'; $('s_24').className='status'; }
-    else{ $('s_24').textContent='❌ เกิน 24 ตัวอักษร ('+v.length+')'; $('s_24').className='status bad'; }
+    }
+    else if(v.length < 24){
+      $('s_24').textContent='⛔ RF ต้องมี 24 ตัวอักษรเท่านั้น ('+v.length+'/24)';
+      $('s_24').className='status bad';
+    }
+    else{
+      $('s_24').textContent='❌ RF เกิน 24 ตัวอักษร ('+v.length+'/24)';
+      $('s_24').className='status bad';
+      // ตัดเกินทิ้งเพื่อป้องกันสแกนผิด
+      $('qr24').value = v.substring(0,24);
+    }
   }
   // VVVV อัปเดต collectData ให้รวม cutMachineNo VVVV
-  function collectData() {
-    const name = $('fileName').value.trim();
-    const info21 = $('qr21').value.trim(); // ข้อมูล Roll (21 ตัวอักษร)
-    const info24 = $('qr24').value.trim(); // ข้อมูล RF (24 ตัวอักษร)
-    const date = $('date').value;
+  function collectData(){
+    const name=$('fileName').value.trim(), info2=$('qr24').value.trim(), date=$('date').value;
     const line = $('line') ? $('line').value.trim() : '';
-    const cutMachineNo = $('cutMachineNo') ? $('cutMachineNo').value.trim() : '';
-
-    // ตรวจสอบเงื่อนไข 4 ช่องหลักตามที่คุณต้องการ
-    if (!name || !cutMachineNo || !info21 || !info24) {
-        let missing = [];
-        if (!name) missing.push("ชื่อไฟล์");
-        if (!cutMachineNo) missing.push("หมายเลขเครื่องตัด");
-        if (!info21) missing.push("ข้อมูล Roll (21 ตัวอักษร)");
-        if (!info24) missing.push("ข้อมูล RF (24 ตัวอักษร)");
-        
-        alert("กรุณากรอกข้อมูลให้ครบถ้วน: " + missing.join(", "));
-        return null; // ส่งค่า null กลับไปเพื่อให้ makeQR รู้ว่าข้อมูลไม่ครบ
-    }
-
-    // รวมข้อมูลสำหรับสร้าง QR
-    let base = name + '|' + info24 + '|' + date;
-    base = line ? base + '|' + line : base;
-    return cutMachineNo ? base + '|' + cutMachineNo : base;
-}
-  // ^^^^ อัปเดต collectData ให้รวม cutMachineNo ^^^^
-  async function makeQR() {
-    await ensureQR();
-    if (!(window.QRCode && QRCode.toCanvas)) {
-        alert('ยังไม่มีตัวสร้าง QR — โปรดเชื่อมต่ออินเทอร์เน็ต');
-        return;
-    }
+    const cutMachineNo = $('cutMachineNo') ? $('cutMachineNo').value.trim() : ''; // NEW
     
-    const data = collectData(); 
-    if (!data) { 
-        // ถ้า data เป็น null (เพราะกรอกไม่ครบ) ให้หยุดการทำงานทันที
-        return false; 
-    }
+    let base = (name&&info2&&date)?(name+'|'+info2+'|'+date):'';
+    
+    if(!base) return '';
+    
+    base = line ? base+'|'+line : base;
+    return cutMachineNo ? base+'|'+cutMachineNo : base; // NEW: เพิ่ม cutMachineNo
+  }
+  // ^^^^ อัปเดต collectData ให้รวม cutMachineNo ^^^^
+  async function makeQR(){
 
-    return new Promise(function(resolve) {
-        QRCode.toCanvas($('qrCanvas'), data, { width: 180, margin: 2 }, function(err) {
-            if (err) {
-                console.error(err);
-                resolve(false);
-                return;
-            }
-            renderListQR(data);
-            if (CFG.autoClear) {
-                $('qr21').value = '';
-                $('s_21').textContent = 'รอข้อมูล 21 ตัวอักษร…';
-                $('s_21').className = 'status';
-                $('qr24').value = '';
-                $('s_24').textContent = 'พร้อมรับข้อมูล 24 ตัวอักษร';
-                $('s_24').className = 'status ok';
-                $('qr21').focus();
-            }
-            resolve(true);
-        });
+  // === GUARD: Require Roll (qr21) and RF (qr24) ===
+  const _roll = (document.getElementById('qr21')?.value || '').trim();
+  const _rf   = (document.getElementById('qr24')?.value || '').trim();
+  if(!_roll || !_rf){
+    alert('❌ กรุณากรอกข้อมูล Roll และ RF ให้ครบก่อนสร้าง/อัปเดต QR');
+    return false;
+  }
+
+    await ensureQR();
+    if(!(window.QRCode&&QRCode.toCanvas)){ alert('ยังไม่มีตัวสร้าง QR — โปรดเชื่อมต่ออินเทอร์เน็ต'); return; }
+    const data=collectData(); if(!data){ return; }
+    return new Promise(function(resolve){
+      QRCode.toCanvas($('qrCanvas'), data, {width:180, margin:2}, function(err){
+        if(err){ console.error(err); resolve(false); return; }
+        renderListQR(data);
+        if(CFG.autoClear){
+          $('qr21').value=''; $('s_21').textContent='รอข้อมูล 21 ตัวอักษร…'; $('s_21').className='status';
+          $('qr24').value=''; $('s_24').textContent='พร้อมรับข้อมูล 24 ตัวอักษร'; $('s_24').className='status ok';
+          $('qr21').focus();
+        }
+        resolve(true);
+      });
     });
-}
+  }
 
   let allFiles=[], viewFiles=[], currentIdx=0, blobURL=null;
   function loadFolder(){
@@ -1078,7 +1163,7 @@ function renderExtraRows(rows){
               <button type="button" id="btnFit" style="border:1px solid #cbd5e1;border-radius:6px;padding:2px 6px;cursor:pointer;background:#f8fafc">พอดีกว้าง</button>
               <button type="button" id="btnScroll" style="border:1px solid #cbd5e1;border-radius:6px;padding:2px 6px;cursor:pointer;background:#fff">เลื่อนแนวนอน</button>
             </div>
-            <div id="extraTableWrap" style="overflow:auto; max-height:520px; max-width:100%; overflow-x:auto; width:100%; min-width:100%; overflow-x:auto">`);
+            <div id="extraTableWrap" style="overflow:auto; max-height:850px; max-width:100%; overflow-x:auto; width:100%; min-width:100%; overflow-x:auto">`);
   
   out.push('<div class="status-filter-bar" id="statusFilterBar">'
     + '<span style="opacity:.7;font-size:12px">กรองสถานะ:</span>'
@@ -1091,18 +1176,18 @@ out.push('<div id="quickSaveBar" style="margin:6px 0 8px 0;display:flex;gap:8px;
  + '<button id="saveAllStatusBtn" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer">บันทึกรายการที่เปลี่ยน (<span id="saveAllCount">0</span>)</button>' + '<button id="saveAllEveryRowBtn" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer">บันทึกสถานะทั้งหมดในหน้านี้</button>'
  + '<span id="saveAllHint" style="font-size:12px;color:#64748b">บันทึกอัตโนมัติ</span>'
 + '</div>');
-// VVVV การแก้ไข: เปลี่ยน font-size:12px เป็น font-size:14px VVVV
-out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:0;font-size:14px;min-width:100%; width:max-content;table-layout:auto;">');
+// VVVV การแก้ไข: เปลี่ยน font-size:12px เป็น font-size:16px VVVV
+out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:0;font-size:16px;min-width:100%; width:max-content;table-layout:auto;">');
   out.push('<thead><tr>');
 
   for(let i=0;i<maxCols;i++){
     const label = headerNames[i] || colLetter(i);
     const align = (i >= 2) ? 'center' : 'left';
-    // VVVV การแก้ไข: เปลี่ยน padding:8px 10px เป็น padding:10px 12px VVVV
-    out.push('<th style="text-align:'+align+';border-bottom:1px solid #e2e8f0;padding:10px 12px;white-space:nowrap">'+label+'</th>');
+    // VVVV การแก้ไข: เปลี่ยน padding:12px 16px เป็น padding:14px 16px VVVV
+    out.push('<th style="text-align:'+align+';border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">'+label+'</th>');
   }
-  // VVVV การแก้ไข: เปลี่ยน padding:8px 10px เป็น padding:10px 12px VVVV
-  out.push('<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:10px 12px;white-space:nowrap">รายงาน</th>');
+  // VVVV การแก้ไข: เปลี่ยน padding:12px 16px เป็น padding:14px 16px VVVV
+  out.push('<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">รายงาน</th>');
   out.push('</tr></thead><tbody>');
 
   (rows||[]).forEach((r,rowIndex) => {
@@ -1113,14 +1198,14 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
       
       if(i===0){
         out.push(
-          // VVVV การแก้ไข: เปลี่ยน padding:8px 10px เป็น padding:10px 12px VVVV
-          '<td style="text-align:'+align+';border-bottom:1px dashed #e5e7eb;padding:10px 12px;white-space:nowrap;vertical-align:middle">'
+          // VVVV การแก้ไข: เปลี่ยน padding:12px 16px เป็น padding:14px 16px VVVV
+          '<td style="text-align:'+align+';border-bottom:1px dashed #e5e7eb;padding:14px 16px;white-space:nowrap;vertical-align:middle">'
           + '<span class="cf-link" title="คลิกเพื่อส่งไปค้นหา" data-cutfile="'+String(val).replace(/"/g,'&quot;')+'">'+ String(val) +'</span>'
           + '</td>'
         );
       }else{
-        // VVVV การแก้ไข: เปลี่ยน padding:8px 10px เป็น padding:10px 12px VVVV
-        out.push('<td style="text-align:'+align+';border-bottom:1px dashed #e5e7eb;padding:10px 12px;white-space:nowrap;vertical-align:middle">'+ String(val) +'</td>');
+        // VVVV การแก้ไข: เปลี่ยน padding:12px 16px เป็น padding:14px 16px VVVV
+        out.push('<td style="text-align:'+align+';border-bottom:1px dashed #e5e7eb;padding:14px 16px;white-space:nowrap;vertical-align:middle">'+ String(val) +'</td>');
       }
 
     }
@@ -1131,7 +1216,7 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
 
     const selectHtml =
       // VVVV การแก้ไข: เปลี่ยน padding/height ของ select VVVV
-      '<select data-role="status" data-key="'+rowKey+'" style="border:1px solid #cbd5e1;border-radius:6px;padding:6px 8px;margin-right:6px;height:34px;">'
+      '<select data-role="status" data-key="'+rowKey+'" style="border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px;margin-right:6px;height:40px;">'
       + '<option value="">สถานะ</option>'
       + '<option value="เสร็จสิ้น"'+(data.status==='เสร็จสิ้น'?' selected':'')+'>เสร็จสิ้น</option>'
       + '<option value="กำลังทำ"'+(data.status==='กำลังทำ'?' selected':'')+'>กำลังทำ</option>'
@@ -1142,7 +1227,7 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
       '<input data-role="note" data-key="'+rowKey+'" type="text" placeholder="รายละเอียด/ปัญหา"'
       + ' value="'+(data.note||'').replace(/"/g,'&quot;')+'"'
       // VVVV การแก้ไข: เปลี่ยน padding/height ของ input VVVV
-      + ' style="width:420px;max-width:60vw;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;height:34px;">';
+      + ' style="width:420px;max-width:60vw;border:1px solid #cbd5e1;border-radius:6px;padding:12px 16px;height:40px;">';
 
     const tsText = data.ts ? new Date(data.ts).toLocaleString() : '';
     // VVVV การแก้ไข: เปลี่ยน font-size ของ small VVVV
@@ -1169,7 +1254,6 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
       newWrap.scrollLeft = _extraTableScrollLeft;
     }, 0);
   }
-
 
   // Attach Cut-file click -> fill search & trigger new round
   (function attachCutfileHandler(){
@@ -1237,7 +1321,6 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
     applyFilter();
   })();
 
-
   // Build sticky header that syncs with horizontal scroll
   (function makeStickyHeader(){
     const wrap = document.getElementById('extraTableWrap');
@@ -1270,7 +1353,6 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
     tbl.tHead.style.pointerEvents = 'none';
     tbl.tHead.style.height = '0px';
 
-
     // Compute widths
     const ths = Array.from(tbl.tHead.querySelectorAll('th'));
     const cloneThs = Array.from(theadClone.querySelectorAll('th'));
@@ -1298,7 +1380,6 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
       });
     });
   })();
-
 
   // Toggle view
   (function(){
@@ -1480,25 +1561,544 @@ async function refreshExtraFromSheet(){
   }
     // ... โค้ดส่วนอื่นๆ ที่มีอยู่เดิม ...
   });
+
+// === STRICT INPUT FILTER FOR SEARCH FIELD (A-Z / 0-9 / # ONLY) ===
+function normalizeSearchInput(el){
+  if(!el) return;
+  let v = el.value || '';
+  v = v.toUpperCase();
+  v = v.replace(/[^A-Z0-9#-]/g, '');
+  if(el.value !== v){
+    el.value = v;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  const s = document.getElementById('search');
+  if(!s) return;
+
+  // typing / scanner
+  s.addEventListener('input', function(){
+    normalizeSearchInput(s);
+  });
+
+  // paste protection
+  s.addEventListener('paste', function(e){
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    s.value = text;
+    normalizeSearchInput(s);
+  });
+});
+
+
+// === SEARCH STATUS COLOR LOGIC ===
+function applySearchStatus(el, hadForbidden){
+  el.classList.remove('valid','invalid');
+  if(el.value.length === 0){
+    return;
+  }
+  if(hadForbidden){
+    el.classList.add('invalid');
+  }else{
+    el.classList.add('valid');
+  }
+}
+
+// Override normalizeSearchInput to track forbidden chars
+function normalizeSearchInput(el){
+  if(!el) return;
+  const raw = el.value || '';
+  const upper = raw.toUpperCase();
+  const cleaned = upper.replace(/[^A-Z0-9#-]/g, '');
+  const hadForbidden = (upper !== cleaned);
+
+  el.value = cleaned;
+  applySearchStatus(el, hadForbidden);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  const s = document.getElementById('search');
+  if(!s) return;
+
+  s.addEventListener('input', function(){
+    normalizeSearchInput(s);
+  });
+
+  s.addEventListener('paste', function(e){
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    s.value = text;
+    normalizeSearchInput(s);
+  });
+});
+
+
+// === FORCE EXACT MATCH BEFORE SHOWING PREVIEW BUTTON ===
+function enforceExactMatchButtons(){
+  const searchEl = document.getElementById('search');
+  if(!searchEl) return;
+  const search = (searchEl.value || '').trim().toUpperCase();
+
+  document.querySelectorAll('[data-open]').forEach(btn => {
+    const file = btn.getAttribute('data-open') || '';
+    const cleanFile = file.replace(/\.(pdf|tif|tiff)$/i,'').toUpperCase();
+    if(search && search === cleanFile){
+      btn.style.display = '';
+    }else{
+      btn.style.display = 'none';
+    }
+  });
+}
+
+// Hook into existing renderList safely
+(function(){
+  const _renderList = window.renderList;
+  window.renderList = function(){
+    _renderList.apply(this, arguments);
+    enforceExactMatchButtons();
+  };
+})();
+
+
+/* === AUTO-FOCUS / AUTO-FLOW (Operator Mode) === */
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Focus Roll (qr21) immediately
+  const roll = document.getElementById('qr21');
+  const rf   = document.getElementById('qr24');
+
+  if (roll) {
+    setTimeout(() => roll.focus(), 300);
+  }
+
+  // 2) When Roll complete (21 chars) -> jump to RF
+  if (roll && rf) {
+    roll.addEventListener('input', () => {
+      if (roll.value.trim().length === 21) {
+        rf.focus();
+      }
+    });
+
+    // 3) When RF complete (24 chars) -> auto process and return to Roll
+    rf.addEventListener('input', () => {
+      if (rf.value.trim().length === 24) {
+        // small delay to let auto-build finish
+        setTimeout(() => {
+          roll.focus();
+        }, 300);
+      }
+    });
+  }
+});
+/* === END AUTO-FOCUS / AUTO-FLOW === */
+
 </script>
 
 <style>
   #upTable th, #upTable td {
     font-size: 16px; /* Adjust font size as needed */
   }
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
+
 </style>
 
 <style>
   #upTable th, #upTable td {
     font-size: 18px; /* Increased font size */
   }
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
+
 </style>
 
 <style>
   #upTable th, #upTable td {
     font-size: 20px; /* Increased font size further */
   }
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
+
 </style>
+
+<style>
+/* === NEW WORKFLOW LAYOUT v1 === */
+.main-workflow{
+  display:grid;
+  grid-template-columns: 3fr 2fr; /* 60% / 40% */
+  gap:16px;
+  align-items:start;
+}
+@media (max-width: 1100px){
+  .main-workflow{ grid-template-columns: 1fr; }
+}
+.work-left .card{ margin-bottom:16px; }
+.work-right{
+  position:sticky;
+  top:12px;
+}
+.qr-preview-big{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.qr-preview-big canvas{
+  width:260px !important;
+  height:260px !important;
+}
+.qr-status{
+  width:100%;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+}
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
+
+</style>
+
+<style>
+/* === EXPAND PRODUCTION PLAN HEIGHT === */
+.work-right{
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+.work-right .card{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.work-right .card > .filters,
+.work-right .card > #extraFilters,
+.work-right .card > #extraFetch,
+.work-right .card > #mirrorBox{
+  flex: 1;
+}
+.work-right .card table{
+  max-height: calc(100vh - 220px);
+}
+#extraTableWrap{
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+/* === AUTO-HIDE COLOR FIELDS (UX for operators) === */
+/* ซ่อนช่องที่เกี่ยวกับ สีไฟล์ / สี Roll เฉพาะการแสดงผล แต่ logic ยังทำงาน */
+.hide-color-field{display:none !important;}
+
+
+/* === AUTO-HIDE LIST MODE BUTTONS (Operator UX) === */
+/* ซ่อนปุ่ม: แสดงทั้งหมด / แสดง 1 รายการ / ซ่อนข้อมูล */
+#vAll, #vOne, #vHide {
+  display: none !important;
+}
+
+
+/* === HIDE CUT MACHINE FIELD (Operator UX) === */
+.hide-cut-machine { display:none !important; }
+
+/* icon button */
+.cm-icon-btn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  cursor:pointer;
+  font-size:14px;
+}
+.cm-icon-btn:hover{ background:#f1f5f9; }
+
+
+/* === HIDE CREATE / UPDATE QR BUTTON (Operator UX) === */
+/* ซ่อนปุ่ม สร้าง/อัปเดต QR จากหน้าพนักงาน แต่ยังให้ระบบ autoBuild ทำงาน */
+.btn-make-qr,
+button[onclick*="makeQR"]{
+  display:none !important;
+}
+
+
+/* === HIDE STATUS FILTER BUTTONS (Operator UX) === */
+/* ซ่อน: กรองสถานะ / ทั้งหมด / เสร็จสิ้น / กำลังทำ / ติดปัญหา */
+#statusFilterBar {
+  display: none !important;
+}
+
+
+/* === HIDE VIEW MODE BUTTONS (Operator UX) === */
+/* ซ่อน: มุมมอง พอดีกว้าง / เลื่อนแนวนอน */
+#extraViewToggle {
+  display: none !important;
+}
+
+
+/* === HIDE SAVE STATUS BUTTONS (Operator UX) === */
+/* ซ่อน: บันทึกรายการที่เปลี่ยน / บันทึกสถานะทั้งหมดในหน้านี้ */
+#quickSaveBar,
+#saveAllStatusBtn,
+#saveAllEveryRowBtn {
+  display: none !important;
+}
+
+
+/* === HIDE LIBRARY STATUS TEXT (Operator UX) === */
+/* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
+#libStatus {
+  display: none !important;
+}
+
+</style>
+
 </head>
 <body>
   <div class="wrap">
@@ -1510,10 +2110,11 @@ async function refreshExtraFromSheet(){
       <button id="tabUpload" class="tab" onclick="goUpload()">⬆️ หน้าอัปโหลดข้อมูล</button>
       <span id="uplock" class="pill bad">ล็อกอยู่</span>
     </div>
-
     
     <div id="pageMain">
-      <div class="grid">
+      <div class="main-workflow">
+  <div class="work-left">
+
         <div class="card">
           <h3 class="title">📁 เลือกโฟลเดอร์ & รายการไฟล์ PDF</h3>
           <div class="inline" style="gap:8px">
@@ -1559,10 +2160,12 @@ async function refreshExtraFromSheet(){
                 <button type="button" class="btn gray" id="btnUnlockCM" style="padding:4px 8px;border-radius:6px;font-size:11px;margin-left:6px" onclick="goUnlockCM()">ปลดล็อก</button>
               </label>
               <select id="cutMachineNo" disabled>
-                <option value="">— ไม่ระบุ —</option>
+                <option value="">ไม่ระบุ</option>
                 <option value="NC182/132">NC182/132</option>
                 <option value="NC182/326">NC182/326</option>
                 <option value="NC183/323">NC183/323</option>
+                <option value="NC170-02">NC170-02</option>
+                <option value="NC170-03">NC170-03</option>
               </select>
               <div class="status" id="s_cutMachineNo"></div>
             </div>
@@ -1583,11 +2186,14 @@ async function refreshExtraFromSheet(){
           </div>
           <div class="inline" style="margin-top:12px">
             <div class="qrbox"><canvas id="qrCanvas" width="180" height="180"></canvas></div>
-            <button class="btn" id="btnBuild" onclick="makeQR()">สร้าง/อัปเดต QR</button>
+            <button class="btn" id="btnBuild" onclick="makeQR()" disabled>สร้าง/อัปเดต QR</button>
+            <div id="qrWarn" class="status warn" style="margin-top:16px;display:none">กรุณากรอกข้อมูล Roll และ RF ให้ครบ</div>
           </div>
         </div>
 
-        <div class="card span-all">
+        </div>
+  <div class="work-right">
+<div class="card span-all">
           <div class="title" style="justify-content:space-between;gap:12px;align-items:center">
             <span>🧰 แผนการผลิตแต่ละไลน์</span>
             <div class="inline" style="gap:8px;align-items:center">
@@ -1616,7 +2222,14 @@ async function refreshExtraFromSheet(){
               <div class="status">ยังไม่มีข้อมูลอัปโหลด หรือยังไม่เลือกวันที่</div>
             </div>
           </div>
-        </div>
+        
+    <div id="rightPlanSlot"></div>
+  </div>
+</div>
+
+</div>
+  <div class="work-right" id="rightPlan">
+</div>
       </div>
     </div>
 
@@ -2615,5 +3228,374 @@ document.addEventListener('click', function(ev){
   });
 })();
 </script>
+
+<script>
+(function(){
+  function toggleBuildBtn(){
+    const roll = (document.getElementById('qr21')?.value || '').trim();
+    const rf   = (document.getElementById('qr24')?.value || '').trim();
+    const btn  = document.getElementById('btnBuild');
+    if(!btn) return;
+    btn.disabled = !(roll && rf);
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    ['qr21','qr24'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        ['input','change','keyup','paste','blur'].forEach(ev=>{
+          el.addEventListener(ev, toggleBuildBtn);
+        });
+      }
+    });
+    toggleBuildBtn();
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function toggleBuildBtn(){
+    const roll = (document.getElementById('qr21')?.value || '').trim();
+    const rf   = (document.getElementById('qr24')?.value || '').trim();
+    const btn  = document.getElementById('btnBuild');
+    const warn = document.getElementById('qrWarn');
+    if(!btn) return;
+
+    const ready = !!(roll && rf);
+    btn.disabled = !ready;
+
+    if(warn){
+      if(ready){
+        warn.style.display = 'none';
+      }else{
+        let msg = 'กรุณากรอกข้อมูล ';
+        if(!roll && !rf) msg += 'Roll และ RF ให้ครบ';
+        else if(!roll) msg += 'Roll ให้ครบ';
+        else if(!rf) msg += 'RF ให้ครบ';
+        warn.textContent = msg;
+        warn.style.display = 'block';
+      }
+    }
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    ['qr21','qr24'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){
+        ['input','change','keyup','paste','blur'].forEach(ev=>{
+          el.addEventListener(ev, toggleBuildBtn);
+        });
+      }
+    });
+    toggleBuildBtn();
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function syncBigQR(){
+    const src = document.getElementById('qrCanvas');
+    const dst = document.getElementById('qrCanvasBig');
+    if(!src || !dst) return;
+    const ctx = dst.getContext('2d');
+    ctx.clearRect(0,0,dst.width,dst.height);
+    ctx.drawImage(src,0,0,dst.width,dst.height);
+  }
+  const orig = window.makeQR;
+  if(orig){
+    window.makeQR = async function(){
+      const r = await orig.apply(this, arguments);
+      setTimeout(syncBigQR,50);
+      return r;
+    }
+  }
+})();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('label').forEach(lb=>{
+    if(lb.textContent.includes('สี')){
+      const row = lb.closest('.row') || lb.parentElement;
+      if(row) row.classList.add('hide-color-field');
+    }
+  });
+});
+</script>
+
+
+<!-- Cut Machine Quick Edit -->
+<div id="cmQuickModal" class="modal">
+  <div class="top toolbar">
+    <strong>แก้ไขหมายเลขเครื่องตัด</strong>
+    <span class="grow"></span>
+    <button class="btn gray" onclick="closeCMQuick()">ปิด</button>
+  </div>
+  <div style="background:#fff;padding:16px">
+    <label>หมายเลขเครื่องตัด</label>
+    <select id="cmQuickSelect" style="min-width:240px"></select>
+    <div class="hint" style="margin-top:8px">แก้ไขได้เหมือนเดิม แต่ซ่อนไว้จากหน้าหลัก</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  // ซ่อนแถวของ cutMachineNo
+  const cm = document.getElementById('cutMachineNo');  
+  if(cm){
+    const row = cm.closest('.row') || cm.parentElement;
+    if(row) row.classList.add('hide-cut-machine');
+
+    // clone options to quick modal select
+    const qs = document.getElementById('cmQuickSelect');
+    if(qs){
+      qs.innerHTML = cm.innerHTML;
+      qs.value = cm.value;
+      qs.onchange = ()=>{ cm.value = qs.value; };
+    }
+
+    // add icon button near title
+    const title = document.querySelector('.title');
+    if(title && !document.getElementById('cmIconBtn')){
+      const btn = document.createElement('button');
+      btn.id = 'cmIconBtn';
+      btn.className = 'cm-icon-btn';
+      btn.innerHTML = '🛠 เครื่องตัด';
+      btn.onclick = openCMQuick;
+      title.appendChild(btn);
+    }
+  }
+});
+
+function openCMQuick(){
+  const cm = document.getElementById('cutMachineNo');
+  const qs = document.getElementById('cmQuickSelect');
+  if(cm && qs){ qs.value = cm.value; }
+  document.getElementById('cmQuickModal').classList.add('show');
+}
+function closeCMQuick(){
+  document.getElementById('cmQuickModal').classList.remove('show');
+}
+
+// === REQUIRE LINE BEFORE SCAN (AUTO-LOCK QR) ===
+document.addEventListener('DOMContentLoaded',()=>{
+  const lineEl = document.getElementById('line');
+  const qr21 = document.getElementById('qr21');
+  const s21 = document.getElementById('s_21');
+
+  function lockScan(){
+    if(qr21){
+      qr21.disabled = true;
+      qr21.placeholder = 'กรุณาเลือกไลน์ผลิตก่อน';
+    }
+    if(s21){
+      s21.textContent = '⛔ เลือกไลน์ผลิตก่อนเริ่มงาน';
+      s21.className = 'status bad';
+    }
+  }
+
+  function unlockScan(){
+    if(qr21){
+      qr21.disabled = false;
+      qr21.placeholder = 'ยิงสแกน 21 ตัวอักษรที่นี่';
+    }
+    if(s21){
+      s21.textContent = 'พร้อมรับข้อมูล 21 ตัวอักษร';
+      s21.className = 'status ok';
+    }
+  }
+
+  if(!lineEl || !qr21) return;
+
+  // initial state
+  if(!lineEl.value){
+    lockScan();
+  } else {
+    unlockScan();
+  }
+
+  lineEl.addEventListener('change',()=>{
+    if(!lineEl.value){
+      lockScan();
+      lineEl.focus();
+    } else {
+      unlockScan();
+      qr21.focus();
+    }
+  });
+});
+
+
+// === REQUIRE CUT MACHINE NO BEFORE SCAN (AUTO-LOCK QR) ===
+document.addEventListener('DOMContentLoaded',()=>{
+  const cmEl = document.getElementById('cutMachineNo');
+  const qr21 = document.getElementById('qr21');
+  const s21 = document.getElementById('s_21');
+
+  function lockByCM(){
+    if(qr21){
+      qr21.disabled = true;
+      qr21.placeholder = 'กรุณาเลือกหมายเลขเครื่องตัดก่อน';
+    }
+    if(s21){
+      s21.textContent = '⛔ เลือกหมายเลขเครื่องตัดก่อนเริ่มงาน';
+      s21.className = 'status bad';
+    }
+  }
+
+  function unlockByCM(){
+    if(qr21){
+      qr21.disabled = false;
+      qr21.placeholder = 'ยิงสแกน 21 ตัวอักษรที่นี่';
+    }
+    if(s21){
+      s21.textContent = 'พร้อมรับข้อมูล 21 ตัวอักษร';
+      s21.className = 'status ok';
+    }
+  }
+
+  if(!cmEl || !qr21) return;
+
+  // initial state
+  if(!cmEl.value){
+    lockByCM();
+  }
+
+  cmEl.addEventListener('change',()=>{
+    if(!cmEl.value){
+      lockByCM();
+      cmEl.focus();
+    } else {
+      unlockByCM();
+      qr21.focus();
+    }
+  });
+});
+
+
+// === HARD REQUIRE CUT MACHINE (OVERRIDE ALL UNLOCK LOGIC) ===
+document.addEventListener('DOMContentLoaded',()=>{
+  const lineEl = document.getElementById('line');
+  const cmEl   = document.getElementById('cutMachineNo');
+  const qr21   = document.getElementById('qr21');
+  const s21    = document.getElementById('s_21');
+
+  function lockAll(msg){
+    if(qr21){
+      qr21.disabled = true;
+      qr21.placeholder = msg || 'กรุณาเลือกไลน์ผลิต และ หมายเลขเครื่องตัดก่อน';
+    }
+    if(s21){
+      s21.textContent = '⛔ ' + (msg || 'ต้องเลือกไลน์ผลิต และ หมายเลขเครื่องตัด');
+      s21.className = 'status bad';
+    }
+  }
+
+  function tryUnlock(){
+    const lineOK = lineEl && lineEl.value.trim();
+    const cmOK   = cmEl && !cmEl.disabled && cmEl.value.trim();
+
+    if(lineOK && cmOK){
+      if(qr21){
+        qr21.disabled = false;
+        qr21.placeholder = 'ยิงสแกน 21 ตัวอักษรที่นี่';
+        qr21.focus();
+      }
+      if(s21){
+        s21.textContent = 'พร้อมรับข้อมูล 21 ตัวอักษร';
+        s21.className = 'status ok';
+      }
+    }else{
+      if(!lineOK){
+        lockAll('กรุณาเลือกไลน์ผลิตก่อน');
+      }else if(!cmOK){
+        lockAll('กรุณาเลือกหมายเลขเครื่องตัดก่อน');
+      }
+    }
+  }
+
+  if(!qr21) return;
+
+  // initial lock
+  lockAll();
+
+  // watch changes
+  if(lineEl) lineEl.addEventListener('change', tryUnlock);
+  if(cmEl)   cmEl.addEventListener('change', tryUnlock);
+
+  // also block manual focus
+  qr21.addEventListener('focus',()=>{
+    if(qr21.disabled){
+      tryUnlock();
+    }
+  });
+});
+
+
+// === FIX: HARD REQUIRE CUT MACHINE (CORRECT STATE CHECK) ===
+document.addEventListener('DOMContentLoaded',()=>{
+  const lineEl = document.getElementById('line');
+  const cmEl   = document.getElementById('cutMachineNo');
+  const qr21   = document.getElementById('qr21');
+  const s21    = document.getElementById('s_21');
+
+  function lock(msg){
+    if(qr21){
+      qr21.disabled = true;
+      qr21.placeholder = msg;
+    }
+    if(s21){
+      s21.textContent = '⛔ ' + msg;
+      s21.className = 'status bad';
+    }
+  }
+
+  function unlock(){
+    if(qr21){
+      qr21.disabled = false;
+      qr21.placeholder = 'ยิงสแกน 21 ตัวอักษรที่นี่';
+      qr21.focus();
+    }
+    if(s21){
+      s21.textContent = 'พร้อมรับข้อมูล 21 ตัวอักษร';
+      s21.className = 'status ok';
+    }
+  }
+
+  function checkGate(){
+    const lineOK = lineEl && lineEl.value.trim() !== '';
+    const cmOK   = cmEl && cmEl.value && cmEl.value.trim() !== '';
+
+    if(!lineOK){
+      lock('กรุณาเลือกไลน์ผลิตก่อน');
+      return;
+    }
+    if(!cmOK){
+      lock('กรุณาเลือกหมายเลขเครื่องตัดก่อน');
+      return;
+    }
+    unlock();
+  }
+
+  if(!qr21) return;
+
+  // initial
+  checkGate();
+
+  if(lineEl) lineEl.addEventListener('change', checkGate);
+  if(cmEl)   cmEl.addEventListener('change', checkGate);
+
+  qr21.addEventListener('focus',()=>{
+    if(qr21.disabled){
+      checkGate();
+    }
+  });
+});
+
+</script>
+
 </body>
 </html>
