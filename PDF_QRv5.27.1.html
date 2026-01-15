@@ -3595,6 +3595,35 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
+
+// === OVERRIDE onQR24 : HARD VALIDATION A/B/C + 23 DIGITS ===
+function onQR24(){
+  let vRaw = $('qr24').value || '';
+  let v = vRaw.replace(/\s/g,'').toUpperCase();
+  if(v !== vRaw){ $('qr24').value = v; }
+
+  // ต้องขึ้นต้นด้วย A, B หรือ C และตามด้วยตัวเลข 23 ตัว รวม 24 ตัว
+  const pattern = /^[ABC]\d{23}$/;
+
+  if(v.length !== 24){
+    $('s_24').textContent='⛔ RF ต้องมี 24 ตัวอักษร ('+v.length+'/24)';
+    $('s_24').className='status bad';
+    return;
+  }
+
+  if(!pattern.test(v)){
+    $('s_24').textContent='⛔ QR ผิดประเภท (ต้องขึ้นต้น A / B / C และเป็นตัวเลขเท่านั้น)';
+    $('s_24').className='status bad';
+    $('qr24').value = '';
+    $('qr24').focus();
+    return;
+  }
+
+  $('s_24').textContent='✅ RF ถูกต้อง (24 ตัวอักษร)';
+  $('s_24').className='status ok';
+  if(CFG.autoBuild){ makeQR(); }
+}
+
 </script>
 
 </body>
