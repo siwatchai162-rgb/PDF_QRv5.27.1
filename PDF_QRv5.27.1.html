@@ -2099,6 +2099,42 @@ button[onclick*="makeQR"]{
 
 </style>
 
+
+<!-- === PATCH v29: Hide Delete Buttons (Operator Safety) === -->
+<style>
+/* ซ่อนปุ่มลบข้อมูลทั้งหมด เพื่อป้องกันการกดพลาด */
+button.delete,
+button.btn-delete,
+button[data-action='delete'],
+button[onclick*='delete'],
+button[onclick*='remove'],
+button[onclick*='clear']{
+  display:none !important;
+}
+</style>
+<!-- === END PATCH v29 === -->
+
+
+<!-- === PATCH v30: Reduce Search Filename Input Width (<=30 chars UX) === -->
+<style>
+/* ลดความกว้างช่องค้นหาชื่อไฟล์ ให้เหมาะกับความยาวไม่เกิน 30 ตัวอักษร */
+#search,
+.searchShort{
+  max-width: 320px !important;   /* ปรับเล็กลงจากเดิม */
+  width: 320px !important;
+}
+
+/* มือถือให้ยืดหยุ่นเล็กน้อย */
+@media (max-width: 980px){
+  #search,
+  .searchShort{
+    max-width: 260px !important;
+    width: 100% !important;
+  }
+}
+</style>
+<!-- === END PATCH v30 === -->
+
 </head>
 <body>
   <div class="wrap">
@@ -2120,6 +2156,11 @@ button[onclick*="makeQR"]{
           <div class="inline" style="gap:8px">
             <input id="search" class="searchShort" placeholder="ค้นหาชื่อไฟล์..."
                    oninput="onSearchInput()" onkeydown="if(event.key==='Enter'){onSearchDone()}"/>
+<div style="margin-top:10px">
+  <label for="master">Master</label>
+  <input id="master" type="text" placeholder="กรอก Master" />
+</div>
+
             <button class="btn gray" onclick="clearSearch()">ลบข้อมูลในช่อง</button>
             <input type="file" id="folder" webkitdirectory directory multiple style="padding:10px;border:1px dashed #cfd5e1;border-radius:10px;background:#fff"/>
             <button class="btn" id="btnLoad" onclick="loadFolder()">โหลดโฟลเดอร์</button>
@@ -3626,5 +3667,220 @@ function onQR24(){
 
 </script>
 
+
+<script>
+// === Step 2: Auto-fill Master from Materials when clicking Cut-file ===
+document.addEventListener('click', function(e){
+  const el = e.target;
+  if(el && el.classList.contains('cf-link')){
+    // find the row
+    const tr = el.closest('tr');
+    if(!tr) return;
+    const tds = tr.querySelectorAll('td');
+    // Materials column is index 1
+    if(tds.length > 1){
+      const materials = tds[1].innerText.trim();
+      const masterInput = document.getElementById('master');
+      if(masterInput){
+        masterInput.value = materials;
+        masterInput.dispatchEvent(new Event('input'));
+      }
+    }
+  }
+});
+</script>
+
+<!-- === PATCH v25: Disable QR21 length/cut logic === -->
+<script>
+(function(){
+  try{
+    if(typeof state!=='undefined'){
+      state.requireScan21 = false;
+    }
+    // override onQR21 to accept any length and do nothing special
+    window.onQR21 = function(){
+      let el = document.getElementById('qr21');
+      let st = document.getElementById('s_21');
+      if(!el) return;
+      el.value = el.value.toUpperCase();
+      if(st){
+        st.textContent = el.value ? '✔️ รับค่า QR21 แล้ว (ไม่ตัด ไม่เช็กความยาว)' : 'รอข้อมูล QR21';
+        st.className = 'status ' + (el.value ? 'ok':''); 
+      }
+    };
+    // always allow QR24
+    window.setInfo2Enabled = function(enabled, focus){
+      const q=document.getElementById('qr24');
+      const s=document.getElementById('s_24');
+      if(q){ q.disabled=false; if(focus) q.focus(); }
+      if(s){ s.textContent='พร้อมรับข้อมูล 24 ตัวอักษร'; s.className='status ok'; }
+    };
+  }catch(e){ console.error(e); }
+})();
+</script>
+<!-- === END PATCH v25 === -->
+
+
+<!-- === PATCH v27: Master↔QR21 match (trim P#) + Auto-focus QR24 === -->
+<script>
+(function(){
+  try{
+    function normalizeQR21(v){
+      v = (v||'').toUpperCase().trim();
+      if(v.startsWith('P#')) return v.substring(1);
+      return v;
+    }
+
+    window.onQR21 = function(){
+      const qr21 = document.getElementById('qr21');
+      const master = document.getElementById('master');
+      const qr24 = document.getElementById('qr24');
+      const s21 = document.getElementById('s_21');
+      const s24 = document.getElementById('s_24');
+
+      if(!qr21) return;
+
+      qr21.value = qr21.value.toUpperCase();
+
+      const raw = qr21.value;
+      const norm = normalizeQR21(raw);
+      const mval = master ? master.value.toUpperCase().trim() : '';
+
+      if(s21){
+        s21.textContent = raw ? ('QR21 หลังตัด = ' + norm) : 'รอข้อมูล QR21';
+        s21.className = raw ? 'status ok' : 'status';
+      }
+
+      if(!qr24) return;
+
+      if(mval && norm === mval){
+        qr24.disabled = false;
+        if(s24){
+          s24.textContent = '✅ QR21 ตรงกับ Master → ปลดล็อก QR24';
+          s24.className = 'status ok';
+        }
+        // AUTO-FOCUS QR24
+        setTimeout(()=>{
+          qr24.focus();
+          if(qr24.select) qr24.select();
+        }, 0);
+      }else{
+        qr24.disabled = true;
+        qr24.value = '';
+        if(s24){
+          s24.textContent = '⛔ QR21 ยังไม่ตรง Master';
+          s24.className = 'status bad';
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function(){
+      const qr24 = document.getElementById('qr24');
+      const s24 = document.getElementById('s_24');
+      if(qr24){
+        qr24.disabled = true;
+        if(s24){
+          s24.textContent = '⛔ รอ QR21 ตรงกับ Master';
+          s24.className = 'status';
+        }
+      }
+    });
+  }catch(e){ console.error(e); }
+})();
+</script>
+<!-- === END PATCH v27 === -->
+
+
+<!-- === PATCH v28: Highlight mismatch message when QR21 != Master === -->
+<script>
+(function(){
+  try{
+    function normalizeQR21(v){
+      v = (v||'').toUpperCase().trim();
+      if(v.startsWith('P#')) return v.substring(1);
+      return v;
+    }
+
+    window.onQR21 = function(){
+      const qr21 = document.getElementById('qr21');
+      const master = document.getElementById('master');
+      const qr24 = document.getElementById('qr24');
+      const s21 = document.getElementById('s_21');
+      const s24 = document.getElementById('s_24');
+
+      if(!qr21) return;
+
+      qr21.value = qr21.value.toUpperCase();
+
+      const raw = qr21.value;
+      const norm = normalizeQR21(raw);
+      const mval = master ? master.value.toUpperCase().trim() : '';
+
+      if(s21){
+        s21.textContent = raw ? ('QR21 หลังตัด = ' + norm) : 'รอข้อมูล QR21';
+        s21.className = raw ? 'status ok' : 'status';
+      }
+
+      if(!qr24) return;
+
+      if(mval && norm === mval){
+        qr24.disabled = false;
+        if(s24){
+          s24.textContent = '✅ QR21 ตรงกับ Master → ปลดล็อก QR24';
+          s24.className = 'status ok';
+        }
+        setTimeout(()=>{
+          qr24.focus();
+          if(qr24.select) qr24.select();
+        }, 0);
+      }else{
+        qr24.disabled = true;
+        qr24.value = '';
+        if(s24){
+          if(mval && norm){
+            s24.innerHTML = '❌ <strong style="color:#dc2626">ไม่ตรงกัน</strong><br>'
+              + 'Master: <span style="color:#2563eb">' + mval + '</span><br>'
+              + 'QR21: <span style="color:#b45309">' + norm + '</span>';
+            s24.className = 'status bad';
+          }else{
+            s24.textContent = '⛔ รอ QR21 ตรงกับ Master';
+            s24.className = 'status';
+          }
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function(){
+      const qr24 = document.getElementById('qr24');
+      const s24 = document.getElementById('s_24');
+      if(qr24){
+        qr24.disabled = true;
+        if(s24){
+          s24.textContent = '⛔ รอ QR21 ตรงกับ Master';
+          s24.className = 'status';
+        }
+      }
+    });
+  }catch(e){ console.error(e); }
+})();
+</script>
+<!-- === END PATCH v28 === -->
+
+
+<script>
+/* Fallback: ซ่อนปุ่มที่มีคำว่า 'ลบ' ในข้อความ */
+(function(){
+  try{
+    document.querySelectorAll('button').forEach(b=>{
+      if((b.textContent||'').includes('ลบ')){
+        b.style.display='none';
+      }
+    });
+  }catch(e){}
+})();
+</script>
+
 </body>
+</html>
+
 </html>
