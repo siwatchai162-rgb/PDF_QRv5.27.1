@@ -201,6 +201,16 @@ button[onclick*="makeQR"]{
   display: none !important;
 }
 
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 <script>
   // ---- Global state ----
@@ -1692,6 +1702,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /* === END AUTO-FOCUS / AUTO-FLOW === */
 
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 <style>
@@ -1761,6 +1792,16 @@ button[onclick*="makeQR"]{
 /* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
 #libStatus {
   display: none !important;
+}
+
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
 }
 
 </style>
@@ -1834,6 +1875,16 @@ button[onclick*="makeQR"]{
   display: none !important;
 }
 
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 
 <style>
@@ -1903,6 +1954,16 @@ button[onclick*="makeQR"]{
 /* ซ่อนข้อความ: QR Maker ✅ · PDF.js ❌ */
 #libStatus {
   display: none !important;
+}
+
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
 }
 
 </style>
@@ -2005,6 +2066,16 @@ button[onclick*="makeQR"]{
   display: none !important;
 }
 
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 
 <style>
@@ -2097,6 +2168,16 @@ button[onclick*="makeQR"]{
   display: none !important;
 }
 
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 
 
@@ -2111,6 +2192,16 @@ button[onclick*='remove'],
 button[onclick*='clear']{
   display:none !important;
 }
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 <!-- === END PATCH v29 === -->
 
@@ -2132,6 +2223,16 @@ button[onclick*='clear']{
     width: 100% !important;
   }
 }
+
+/* === AUTO LOCK ROW WHEN STATUS = กำลังทำ === */
+tr.row-locked { opacity: 0.85; }
+tr.row-locked td { pointer-events: none; }
+tr.row-locked select[data-role="status"]{
+  pointer-events: auto;
+  background:#fff;
+  border:2px solid #2563eb;
+}
+
 </style>
 <!-- === END PATCH v30 === -->
 
@@ -2716,6 +2817,27 @@ document.addEventListener('click', function(ev){
   saveStatusFilterPref(sheetName, val);
 
 });
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 <script>
 /* === v34: Auto-save QR log on build (single sheet) === */
@@ -2780,6 +2902,27 @@ document.addEventListener('click', function(ev){
   });
 })();
 /* === /v34 === */
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script><script>
 /* v35: stronger field reading for scan21/24 */
 (function(){
@@ -2840,7 +2983,28 @@ document.addEventListener('click', function(ev){
       setTimeout(()=>{ try{ document.body.removeChild(form);}catch(e){} }, 1200);
     }catch(e){ /* silent */ }
   }
-})();</script><script>
+})();
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
+</script><script>
 /* v36: snapshot values BEFORE makeQR runs (handles fields cleared by makeQR) */
 (function(){
   const SHEET_NAME = 'QR_Log';
@@ -2903,6 +3067,27 @@ document.addEventListener('click', function(ev){
     };
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script><script>
 /* v37: persist last scanned 21/24; read from input, last cache, or qrText */
 (function(){
@@ -3006,6 +3191,27 @@ document.addEventListener('click', function(ev){
     };
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script><script>
 /* v38: hook onQR21/onQR24 & makeQR to persist actual scan strings */
 (function(){
@@ -3052,6 +3258,27 @@ document.addEventListener('click', function(ev){
     installHooks();
   }
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script><script>
 /* v39: also read from status divs #s_21 / #s_24 (textContent) */
 (function(){
@@ -3153,6 +3380,27 @@ document.addEventListener('click', function(ev){
     };
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 <script>
 /* QR_Log – single-save fix (makeQR-only, strong dedupe) */
@@ -3268,6 +3516,27 @@ document.addEventListener('click', function(ev){
     }
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 <script>
@@ -3291,6 +3560,27 @@ document.addEventListener('click', function(ev){
     toggleBuildBtn();
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3331,6 +3621,27 @@ document.addEventListener('click', function(ev){
     toggleBuildBtn();
   });
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3353,6 +3664,27 @@ document.addEventListener('click', function(ev){
     }
   }
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3365,6 +3697,27 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   });
 });
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3665,6 +4018,27 @@ function onQR24(){
   if(CFG.autoBuild){ makeQR(); }
 }
 
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3688,6 +4062,27 @@ document.addEventListener('click', function(e){
     }
   }
 });
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 <!-- === PATCH v25: Disable QR21 length/cut logic === -->
@@ -3717,6 +4112,27 @@ document.addEventListener('click', function(e){
     };
   }catch(e){ console.error(e); }
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 <!-- === END PATCH v25 === -->
 
@@ -3787,6 +4203,27 @@ document.addEventListener('click', function(e){
     });
   }catch(e){ console.error(e); }
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 <!-- === END PATCH v27 === -->
 
@@ -3863,6 +4300,27 @@ document.addEventListener('click', function(e){
     });
   }catch(e){ console.error(e); }
 })();
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 <!-- === END PATCH v28 === -->
 
@@ -3947,6 +4405,27 @@ document.addEventListener('change', function(e){
 });
 // === END AUTO-FILL NOTE (SANITIZE + OVERWRITE) ===
 
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -3983,6 +4462,27 @@ document.addEventListener('click', function(e){
   });
 });
 // === END FINAL GUARD ===
+
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
+  }
+});
+
 </script>
 
 
@@ -4018,75 +4518,27 @@ document.addEventListener('click', function(e){
   };
 })();
 // === END V10 FIX ===
-</script>
-<script>
-// === LOCK CUT-FILE BY MACHINE WHEN STATUS = กำลังทำ ===
-(function () {
 
-  function getCutFile(tr) {
-    // ปรับ selector ให้ตรงกับ Cut-file ของคุณ
-    return tr.querySelector('a, .cut-file, td')?.innerText.trim();
+// === AUTO APPLY ROW LOCK BASED ON STATUS TEXT ===
+function applyRowLock(){
+  document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+    const sel = tr.querySelector('select[data-role="status"]');
+    if(!sel) return;
+    const txt = (sel.value || sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    if(txt.includes('กำลังทำ') || txt.includes('progress')){
+      tr.classList.add('row-locked');
+    }else{
+      tr.classList.remove('row-locked');
+    }
+  });
+}
+// re-apply after any change
+document.addEventListener('change', e=>{
+  if(e.target && e.target.matches('select[data-role="status"]')){
+    applyRowLock();
   }
+});
 
-  function getStatus(tr) {
-    return tr.querySelector('select')?.value || '';
-  }
-
-  function getGlobalMachine() {
-    const m =
-      document.getElementById('cutMachineNo') ||
-      document.querySelector('select[id*="cutMachine"]') ||
-      document.querySelector('select[name*="cutMachine"]');
-    return m ? m.value : '';
-  }
-
-  function lockRows() {
-    const rows = document.querySelectorAll('tr');
-    const activeLocks = {}; // { cutFile: machine }
-
-    // หา Cut-file ที่กำลังทำอยู่
-    rows.forEach(tr => {
-      const status = getStatus(tr);
-      if (status === 'กำลังทำ') {
-        const cutFile = getCutFile(tr);
-        const machine = getGlobalMachine();
-        if (cutFile && machine) {
-          activeLocks[cutFile] = machine;
-        }
-      }
-    });
-
-    // ล็อกแถวอื่น
-    rows.forEach(tr => {
-      const cutFile = getCutFile(tr);
-      const statusSel = tr.querySelector('select');
-      if (!cutFile || !statusSel) return;
-
-      const lockedMachine = activeLocks[cutFile];
-      const currentMachine = getGlobalMachine();
-
-      if (lockedMachine && lockedMachine !== currentMachine) {
-        // ❌ เครื่องอื่น → ห้ามเลือก "กำลังทำ"
-        [...statusSel.options].forEach(opt => {
-          if (opt.value === 'กำลังทำ') {
-            opt.disabled = true;
-          }
-        });
-        statusSel.title = `Cut-file นี้กำลังทำโดยเครื่อง ${lockedMachine}`;
-      } else {
-        // ✅ เครื่องเดียวกัน → ปลดล็อก
-        [...statusSel.options].forEach(opt => {
-          opt.disabled = false;
-        });
-        statusSel.title = '';
-      }
-    });
-  }
-
-  document.addEventListener('change', lockRows);
-  document.addEventListener('DOMContentLoaded', lockRows);
-
-})();
 </script>
 
 </body>
