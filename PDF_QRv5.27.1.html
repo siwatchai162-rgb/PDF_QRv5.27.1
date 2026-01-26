@@ -3878,6 +3878,215 @@ document.addEventListener('click', function(e){
     });
   }catch(e){}
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// === AUTO-FILL NOTE (SANITIZE + OVERWRITE) ===
+document.addEventListener('change', function(e){
+  const el = e.target;
+  if(el.tagName !== 'SELECT') return;
+
+  const tr = el.closest('tr');
+  if(!tr) return;
+
+  const detail = tr.querySelector('input[placeholder="รายละเอียด/ปัญหา"], textarea');
+  if(!detail) return;
+
+  const status = el.value;
+
+  // ดึงเครื่องตัด (row > global)
+  let machine = '';
+  const rowMachine = tr.querySelector('select[id*="cut"], select[id*="Machine"], select[name*="Machine"], select[name*="cut"]');
+  if(rowMachine && rowMachine.value) machine = rowMachine.value;
+
+  if(!machine){
+    const globalMachine =
+      document.getElementById('cutMachineNo')
+      || document.querySelector('select[id*="cutMachine"]')
+      || document.querySelector('select[name*="cutMachine"]');
+    if(globalMachine && globalMachine.value) machine = globalMachine.value;
+  }
+
+  // 🧹 SANITIZE: ลบสถานะเก่าที่อาจค้างอยู่
+  detail.value = detail.value
+    .replace(/^(กำลังทำ|เสร็จสิ้น|ติดปัญหา).*?(?=$|:)/, '')
+    .trim();
+
+  if(status === 'กำลังทำ'){
+    detail.value = machine ? `กำลังทำ ที่เครื่อง ${machine}` : 'กำลังทำ';
+    detail.readOnly = true;
+  }
+  else if(status === 'เสร็จสิ้น'){
+    detail.value = machine ? `เสร็จสิ้น ที่เครื่อง ${machine}` : 'เสร็จสิ้น';
+    detail.readOnly = true;
+  }
+  else if(status === 'ติดปัญหา'){
+    detail.value = machine ? `ติดปัญหา ที่เครื่อง ${machine}` : 'ติดปัญหา';
+    detail.readOnly = false;
+    detail.focus();
+  }
+  else{
+    detail.readOnly = false;
+  }
+});
+// === END AUTO-FILL NOTE (SANITIZE + OVERWRITE) ===
+
+</script>
+
+
+<script>
+// === FINAL GUARD: FORCE NOTE SYNC BEFORE SAVE ===
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('button');
+  if(!btn) return;
+
+  const isSave = /บันทึก|save|submit|ส่งข้อมูล/i.test(btn.textContent || '');
+  if(!isSave) return;
+
+  document.querySelectorAll('tr').forEach(tr => {
+    const statusSel = tr.querySelector('select');
+    const detail = tr.querySelector('input[placeholder="รายละเอียด/ปัญหา"], textarea');
+    if(!statusSel || !detail) return;
+
+    const status = statusSel.value;
+
+    let machine = '';
+    const globalMachine =
+      document.getElementById('cutMachineNo')
+      || document.querySelector('select[id*="cutMachine"]')
+      || document.querySelector('select[name*="cutMachine"]');
+    if(globalMachine && globalMachine.value) machine = globalMachine.value;
+
+    if(status === 'กำลังทำ'){
+      detail.value = machine ? `กำลังทำ ที่เครื่อง ${machine}` : 'กำลังทำ';
+    } else if(status === 'เสร็จสิ้น'){
+      detail.value = machine ? `เสร็จสิ้น ที่เครื่อง ${machine}` : 'เสร็จสิ้น';
+    } else if(status === 'ติดปัญหา'){
+      detail.value = machine ? `ติดปัญหา ที่เครื่อง ${machine}` : 'ติดปัญหา';
+    }
+  });
+});
+// === END FINAL GUARD ===
+</script>
+
+
+<script>
+// === V10 DEFINITIVE FIX: COMPUTE NOTE AT SEND TIME ===
+(function(){
+  function computeNote(status, machine){
+    if(status === 'กำลังทำ') return machine ? `กำลังทำ ที่เครื่อง ${machine}` : 'กำลังทำ';
+    if(status === 'เสร็จสิ้น') return machine ? `เสร็จสิ้น ที่เครื่อง ${machine}` : 'เสร็จสิ้น';
+    if(status === 'ติดปัญหา') return machine ? `ติดปัญหา ที่เครื่อง ${machine}` : 'ติดปัญหา';
+    return '';
+  }
+
+  const _fetch = window.fetch;
+  window.fetch = function(input, init){
+    try{
+      if(init && init.body && typeof init.body === 'string'){
+        const data = JSON.parse(init.body);
+
+        const gm =
+          document.getElementById('cutMachineNo')
+          || document.querySelector('select[id*="cutMachine"]')
+          || document.querySelector('select[name*="cutMachine"]');
+        const machine = gm ? gm.value : '';
+
+        if(data && data.status){
+          data.note = computeNote(data.status, machine);
+          init.body = JSON.stringify(data);
+        }
+      }
+    }catch(e){}
+    return _fetch.apply(this, arguments);
+  };
+})();
+// === END V10 FIX ===
+</script>
+<script>
+// === LOCK CUT-FILE BY MACHINE WHEN STATUS = กำลังทำ ===
+(function () {
+
+  function getCutFile(tr) {
+    // ปรับ selector ให้ตรงกับ Cut-file ของคุณ
+    return tr.querySelector('a, .cut-file, td')?.innerText.trim();
+  }
+
+  function getStatus(tr) {
+    return tr.querySelector('select')?.value || '';
+  }
+
+  function getGlobalMachine() {
+    const m =
+      document.getElementById('cutMachineNo') ||
+      document.querySelector('select[id*="cutMachine"]') ||
+      document.querySelector('select[name*="cutMachine"]');
+    return m ? m.value : '';
+  }
+
+  function lockRows() {
+    const rows = document.querySelectorAll('tr');
+    const activeLocks = {}; // { cutFile: machine }
+
+    // หา Cut-file ที่กำลังทำอยู่
+    rows.forEach(tr => {
+      const status = getStatus(tr);
+      if (status === 'กำลังทำ') {
+        const cutFile = getCutFile(tr);
+        const machine = getGlobalMachine();
+        if (cutFile && machine) {
+          activeLocks[cutFile] = machine;
+        }
+      }
+    });
+
+    // ล็อกแถวอื่น
+    rows.forEach(tr => {
+      const cutFile = getCutFile(tr);
+      const statusSel = tr.querySelector('select');
+      if (!cutFile || !statusSel) return;
+
+      const lockedMachine = activeLocks[cutFile];
+      const currentMachine = getGlobalMachine();
+
+      if (lockedMachine && lockedMachine !== currentMachine) {
+        // ❌ เครื่องอื่น → ห้ามเลือก "กำลังทำ"
+        [...statusSel.options].forEach(opt => {
+          if (opt.value === 'กำลังทำ') {
+            opt.disabled = true;
+          }
+        });
+        statusSel.title = `Cut-file นี้กำลังทำโดยเครื่อง ${lockedMachine}`;
+      } else {
+        // ✅ เครื่องเดียวกัน → ปลดล็อก
+        [...statusSel.options].forEach(opt => {
+          opt.disabled = false;
+        });
+        statusSel.title = '';
+      }
+    });
+  }
+
+  document.addEventListener('change', lockRows);
+  document.addEventListener('DOMContentLoaded', lockRows);
+
+})();
 </script>
 
 </body>
