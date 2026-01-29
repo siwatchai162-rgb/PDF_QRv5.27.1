@@ -530,7 +530,7 @@ button[onclick*="makeQR"]{
       
       ctx.drawImage(qrCanvas, x, y, w, w);
       images.push(c.toDataURL('image/png'));
-    }
+    }    
     const win=window.open('', '_blank');
 // ... (โค้ดที่เหลือ)
     const doc=win.document; doc.open(); doc.close();
@@ -1187,7 +1187,7 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
     out.push('<th style="text-align:'+align+';border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">'+label+'</th>');
   }
   // VVVV การแก้ไข: เปลี่ยน padding:12px 16px เป็น padding:14px 16px VVVV
-  out.push('<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">รายงาน</th>');
+  out.push('<th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">ข้อมูลเครื่องตัด</th><th style="text-align:left;border-bottom:1px solid #e2e8f0;padding:14px 16px;white-space:nowrap">รายงาน</th>');
   out.push('</tr></thead><tbody>');
 
   (rows||[]).forEach((r,rowIndex) => {
@@ -1210,7 +1210,9 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
 
     }
 
-    // สร้าง cell คอมเมนต์ให้เป็นบรรทัดเดียว (flex) และบันทึก/อ่านจาก localStorage
+    // === เพิ่มช่องข้อมูลเพิ่มเติม (Step 1) ===
+out.push('<td style="border-bottom:1px dashed #e5e7eb;padding:14px 16px;white-space:nowrap;vertical-align:middle"><input type="text" class="extra-info" placeholder="กรอกข้อมูลเครื่องตัด" style="width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;"></td>');
+// สร้าง cell คอมเมนต์ให้เป็นบรรทัดเดียว (flex) และบันทึก/อ่านจาก localStorage
     const rowKey = (r && r.length) ? [r[0],r[1],r[2],r[3]].join('|') : ('row_'+rowIndex);
     const data = {status:'',note:'',ts:''}; // localStorage disabled; rely on Google Sheet
 
@@ -1248,7 +1250,7 @@ out.push('<table id="extraTable" style="border-collapse:separate;border-spacing:
   // *** 2. กู้คืนตำแหน่งการเลื่อนหลังเรนเดอร์ใหม่ ***
   const newWrap = document.getElementById('extraTableWrap');
   if(newWrap){
-    // ใช้ setTimeout เพื่อให้แน่ใจว่า DOM ถูกเรนเดอร์เสร็จสมบูรณ์ก่อน
+    // ใช้ setTimeout เพื่อให้แน่ใจว่า DOM ถูกเรนเดอร์เสร็จสมบูรณ์ก่อน   
     setTimeout(()=>{
       newWrap.scrollTop = _extraTableScrollTop;
       newWrap.scrollLeft = _extraTableScrollLeft;
@@ -3877,6 +3879,1052 @@ document.addEventListener('click', function(e){
       }
     });
   }catch(e){}
+})();
+</script>
+
+
+<script>
+// === Step 2: Auto fill machine no when status = กำลังทำ ===
+document.addEventListener('change', function(e){
+  const sel = e.target;
+  if(sel.tagName !== 'SELECT') return;
+
+  const val = sel.value || sel.options[sel.selectedIndex]?.text || '';
+  const allowStatus = ['กำลังทำ','เสร็จสิ้น','ติดปัญหา'];
+  if(!allowStatus.some(s => val.includes(s))) return;
+
+  // find row
+  const tr = sel.closest('tr');
+  if(!tr) return;
+
+  // get machine no from global selector (cutMachineNo)
+  const machineSel = document.getElementById('cutMachineNo');
+  const machineNo = machineSel ? machineSel.value : '';
+
+  if(!machineNo) return;
+
+  const input = tr.querySelector('input.extra-info');
+  if(input && !input.value){
+    input.value = machineNo;
+  }
+});
+</script>
+
+
+<!-- === PATCH v31: send CutMachine to Extra_Status === -->
+<script>
+(function(){
+  // Hook saveStatus to inject CutMachine from #cutMachineNo
+  const _origSave = window.saveStatus;
+  if(typeof _origSave === 'function'){
+    window.saveStatus = function(rows){
+      try{
+        const cm = document.getElementById('cutMachineNo')?.value || '';
+        if(Array.isArray(rows)){
+          rows = rows.map(r => Object.assign({}, r, { cutMachineNo: cm }));
+        }
+      }catch(e){}
+      return _origSave(rows);
+    }
+  }
+})();
+</script>
+<!-- === END PATCH v31 === -->
+
+
+<!-- === PATCH v32: inject CutMachine into saveStatus payload (fix) === -->
+<script>
+(function(){
+  const _fetch = window.fetch;
+  if(!_fetch) return;
+
+  window.fetch = function(input, init){
+    try{
+      if(init && init.body){
+        let body = init.body;
+        let obj = null;
+        try{
+          obj = JSON.parse(body);
+        }catch(e){}
+        if(obj && obj.action === 'saveStatus' && Array.isArray(obj.rows)){
+          const cm = document.getElementById('cutMachineNo')?.value || '';
+          obj.rows = obj.rows.map(r => Object.assign({}, r, { cutMachineNo: cm }));
+          init.body = JSON.stringify(obj);
+        }
+      }
+    }catch(e){}
+    return _fetch.apply(this, arguments);
+  };
+})();
+</script>
+<!-- === END PATCH v32 === -->
+
+
+<!-- === PATCH v33: inject CutMachine into saveStatus via XMLHttpRequest (FINAL FIX) === -->
+<script>
+(function(){
+  const XHR = window.XMLHttpRequest;
+  if(!XHR) return;
+
+  const _open = XHR.prototype.open;
+  const _send = XHR.prototype.send;
+
+  XHR.prototype.open = function(method, url){
+    this.__isSaveStatus = false;
+    try{
+      if(typeof url === 'string' && url.includes('exec')){
+        this.__isSaveStatus = true;
+      }
+    }catch(e){}
+    return _open.apply(this, arguments);
+  };
+
+  XHR.prototype.send = function(body){
+    try{
+      if(this.__isSaveStatus && body){
+        let obj = null;
+        try{ obj = JSON.parse(body); }catch(e){}
+        if(obj && obj.action === 'saveStatus' && Array.isArray(obj.rows)){
+          const cm = document.getElementById('cutMachineNo')?.value || '';
+          obj.rows = obj.rows.map(r => Object.assign({}, r, { cutMachineNo: cm }));
+          body = JSON.stringify(obj);
+        }
+      }
+    }catch(e){}
+    return _send.call(this, body);
+  };
+})();
+</script>
+<!-- === END PATCH v33 === -->
+
+
+<!-- === PATCH v34 FINAL: ensure cutMachineNo is included in saveStatus payload rows === -->
+<script>
+(function(){
+  function injectCutMachine(obj){
+    try{
+      if(obj && obj.action === 'saveStatus' && Array.isArray(obj.rows)){
+        const cm = document.getElementById('cutMachineNo')?.value || '';
+        obj.rows = obj.rows.map(r => Object.assign({}, r, { cutMachineNo: cm }));
+      }
+    }catch(e){}
+    return obj;
+  }
+
+  // Intercept fetch
+  if(window.fetch){
+    const _fetch = window.fetch;
+    window.fetch = function(input, init){
+      try{
+        if(init && init.body){
+          let obj;
+          try{ obj = JSON.parse(init.body); }catch(e){}
+          if(obj){
+            obj = injectCutMachine(obj);
+            init.body = JSON.stringify(obj);
+          }
+        }
+      }catch(e){}
+      return _fetch.apply(this, arguments);
+    }
+  }
+
+  // Intercept XMLHttpRequest
+  if(window.XMLHttpRequest){
+    const XHR = window.XMLHttpRequest;
+    const _open = XHR.prototype.open;
+    const _send = XHR.prototype.send;
+
+    XHR.prototype.open = function(method, url){
+      this.__isGAS = (typeof url === 'string' && url.indexOf('script.google.com') !== -1);
+      return _open.apply(this, arguments);
+    };
+
+    XHR.prototype.send = function(body){
+      try{
+        if(this.__isGAS && body){
+          let obj;
+          try{ obj = JSON.parse(body); }catch(e){}
+          if(obj){
+            obj = injectCutMachine(obj);
+            body = JSON.stringify(obj);
+          }
+        }
+      }catch(e){}
+      return _send.call(this, body);
+    };
+  }
+
+  // Intercept form submit (payload hidden input)
+  document.addEventListener('submit', function(ev){
+    try{
+      const form = ev.target;
+      if(form && form.tagName === 'FORM'){
+        const input = form.querySelector('input[name="payload"]');
+        if(input){
+          let obj;
+          try{ obj = JSON.parse(input.value); }catch(e){}
+          if(obj){
+            obj = injectCutMachine(obj);
+            input.value = JSON.stringify(obj);
+          }
+        }
+      }
+    }catch(e){}
+  }, true);
+})();
+</script>
+<!-- === END PATCH v34 FINAL === -->
+
+
+<!-- === PATCH v35 FINAL: inject cutMachineNo at SOURCE rows creation === -->
+<script>
+(function(){
+  function currentCutMachine(){
+    return document.getElementById('cutMachineNo')?.value || '';
+  }
+
+  // Patch Array.prototype.push safely for status rows only
+  const _push = Array.prototype.push;
+  Array.prototype.push = function(){
+    try{
+      if(arguments.length === 1){
+        const o = arguments[0];
+        if(o && typeof o === 'object' && 'status' in o && 'rowKey' in o && !('cutMachineNo' in o)){
+          o.cutMachineNo = currentCutMachine();
+        }
+      }
+    }catch(e){}
+    return _push.apply(this, arguments);
+  };
+})();
+</script>
+<!-- === END PATCH v35 FINAL === -->
+
+
+<!-- === PATCH v36 FINAL: inject cutMachineNo BEFORE sending saveStatus payload === -->
+<script>
+(function(){
+  function injectBeforeSend(payload){
+    try{
+      if(payload && payload.action === 'saveStatus' && Array.isArray(payload.rows)){
+        const cm = document.getElementById('cutMachineNo')?.value || '';
+        payload.rows.forEach(r => { r.cutMachineNo = cm; });
+      }
+    }catch(e){}
+    return payload;
+  }
+
+  // Hook common sender functions if exist
+  const hookNames = ['postToGAS','sendStatus','saveStatus','submitStatus'];
+  hookNames.forEach(name=>{
+    if(typeof window[name] === 'function'){
+      const orig = window[name];
+      window[name] = function(payload){
+        payload = injectBeforeSend(payload);
+        return orig.apply(this, arguments);
+      }
+    }
+  });
+
+  // Ultimate fallback: intercept JSON.stringify at send moment
+  const _stringify = JSON.stringify;
+  JSON.stringify = function(v){
+    try{
+      if(v && v.action === 'saveStatus'){
+        injectBeforeSend(v);
+      }
+    }catch(e){}
+    return _stringify.apply(this, arguments);
+  };
+})();
+</script>
+<!-- === END PATCH v36 FINAL === -->
+
+
+<!-- === PATCH: Auto-fill CutMachine when status === 'กำลังทำ' === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH__) return;
+  window.__CUTMACHINE_PATCH__ = true;
+
+  let EXTRA_STATUS_MAP = {};
+  const GSCRIPT_URL = window.GSCRIPT_URL || document.querySelector('script[src*="script.google.com"]') ? window.GSCRIPT_URL : window.GSCRIPT_URL;
+
+  async function loadStatusForSheet(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_MAP = js.map || {};
+    }catch(e){
+      console.warn('loadStatus failed', e);
+      EXTRA_STATUS_MAP = {};
+    }
+  }
+
+  function guessSheetName(){
+    try{
+      const d = document.getElementById('date')?.value;
+      const l = document.getElementById('line')?.value;
+      if(!d) return '';
+      return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+    }catch(e){ return ''; }
+  }
+
+  function hookTable(){
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return;
+    const sheetName = guessSheetName();
+    if(sheetName) loadStatusForSheet(sheetName);
+
+    tbl.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=>{
+        const firstCell = tr.querySelector('td');
+        const rowKey = firstCell ? firstCell.textContent.trim() : '';
+        const data = EXTRA_STATUS_MAP[rowKey];
+        const input = tr.querySelector('input.extra-info');
+        if(!input || !data) return;
+        if(data.status === 'กำลังทำ'){
+          input.value = data.cutMachine || '';
+        }else{
+          input.value = '';
+        }
+      });
+    });
+  }
+
+  const obs = new MutationObserver(()=>hookTable());
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+</script>
+
+
+<!-- === PATCH v2: FIX rowKey mismatch for CutMachine auto-fill === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V2__) return;
+  window.__CUTMACHINE_PATCH_V2__ = true;
+
+  let EXTRA_STATUS_MAP = {};
+
+  async function loadStatus(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_MAP = js.map || {};
+      console.log('[CutMachine] Loaded keys:', Object.keys(EXTRA_STATUS_MAP).slice(0,5));
+    }catch(e){
+      console.warn('[CutMachine] loadStatus failed', e);
+      EXTRA_STATUS_MAP = {};
+    }
+  }
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  function findByRowKey(cutFileText){
+    if(EXTRA_STATUS_MAP[cutFileText]) return EXTRA_STATUS_MAP[cutFileText];
+    // fallback: key startsWith cut-file
+    const keys = Object.keys(EXTRA_STATUS_MAP);
+    return keys.map(k=>EXTRA_STATUS_MAP[k]).find(v=>String(v && v.status) && k.startsWith(cutFileText)) || null;
+  }
+
+  function hook(){
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return;
+
+    const sheetName = guessSheetName();
+    if(sheetName) loadStatus(sheetName);
+
+    tbl.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=>{
+        const cutFile = tr.querySelector('.cf-link')?.textContent?.trim();
+        const input = tr.querySelector('input.extra-info');
+        if(!cutFile || !input) return;
+
+        const data = EXTRA_STATUS_MAP[cutFile] || Object.keys(EXTRA_STATUS_MAP)
+          .map(k=>({k, v:EXTRA_STATUS_MAP[k]}))
+          .find(o=>o.k.includes(cutFile))?.v;
+
+        console.log('[CutMachine] click', {cutFile, data});
+
+        if(data && data.status === 'กำลังทำ'){
+          input.value = data.cutMachine || '';
+        }else{
+          input.value = '';
+        }
+      });
+    });
+  }
+
+  const obs = new MutationObserver(hook);
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+</script>
+
+
+<!-- === PATCH v3: Auto-fill CutMachine on render (no click required) === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V3__) return;
+  window.__CUTMACHINE_PATCH_V3__ = true;
+
+  let EXTRA_STATUS_MAP = {};
+
+  async function loadStatus(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_MAP = js.map || {};
+      autoFillAll();
+    }catch(e){
+      console.warn('[CutMachine v3] loadStatus failed', e);
+      EXTRA_STATUS_MAP = {};
+    }
+  }
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  function findDataByCutFile(cutFile){
+    if(EXTRA_STATUS_MAP[cutFile]) return EXTRA_STATUS_MAP[cutFile];
+    const keys = Object.keys(EXTRA_STATUS_MAP);
+    for(const k of keys){
+      if(k.includes(cutFile)) return EXTRA_STATUS_MAP[k];
+    }
+    return null;
+  }
+
+  function autoFillAll(){
+    const rows = document.querySelectorAll('#extraTable tbody tr');
+    rows.forEach(tr=>{
+      const cutFile = tr.querySelector('.cf-link')?.textContent?.trim();
+      const input = tr.querySelector('input.extra-info');
+      if(!cutFile || !input) return;
+
+      const data = findDataByCutFile(cutFile);
+      if(data && data.status === 'กำลังทำ'){
+        input.value = data.cutMachine || '';
+      }
+    });
+  }
+
+  const obs = new MutationObserver(()=>{
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return;
+    const sheetName = guessSheetName();
+    if(sheetName) loadStatus(sheetName);
+  });
+
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+</script>
+
+
+<!-- === PATCH v4: Strict match by rowKey + status === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V4__) return;
+  window.__CUTMACHINE_PATCH_V4__ = true;
+
+  let EXTRA_STATUS_ROWS = [];
+
+  async function loadStatus(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map || {}).map(([k,v])=>({rowKey:k, ...v}));
+      autoFill();
+    }catch(e){
+      console.warn('[CutMachine v4] loadStatus failed', e);
+      EXTRA_STATUS_ROWS = [];
+    }
+  }
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  function autoFill(){
+    const trs = document.querySelectorAll('#extraTable tbody tr');
+    trs.forEach(tr=>{
+      const tds = tr.querySelectorAll('td');
+      if(tds.length < 4) return;
+
+      const cutFile = tds[0]?.innerText.trim();
+      const times   = tds[2]?.innerText.trim();
+      const pcs     = tds[3]?.innerText.trim();
+      const input   = tr.querySelector('input.extra-info');
+      if(!cutFile || !input) return;
+
+      // หา rowKey ที่ตรงจริง (ต้องมี cut-file + times + pcs)
+      const hit = EXTRA_STATUS_ROWS.find(r=>
+        r.status === 'กำลังทำ' &&
+        r.rowKey.includes(cutFile) &&
+        r.rowKey.includes('|' + times + '|') &&
+        r.rowKey.includes('|' + pcs)
+      );
+
+      if(hit){
+        input.value = hit.cutMachine || '';
+      }else{
+        // ถ้าไม่ใช่กำลังทำ หรือไม่ match rowKey จริง -> ล้าง
+        input.value = '';
+      }
+    });
+  }
+
+  const obs = new MutationObserver(()=>{
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return;
+    const sheetName = guessSheetName();
+    if(sheetName) loadStatus(sheetName);
+  });
+
+  obs.observe(document.body, {childList:true, subtree:true});
+})();
+</script>
+
+
+<!-- === PATCH v5: Stable CutMachine fill based on CURRENT row status === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V5__) return;
+  window.__CUTMACHINE_PATCH_V5__ = true;
+
+  let EXTRA_STATUS_ROWS = [];
+
+  async function loadStatus(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map || {}).map(([k,v])=>({rowKey:k, ...v}));
+      applyAll();
+    }catch(e){
+      console.warn('[CutMachine v5] loadStatus failed', e);
+      EXTRA_STATUS_ROWS = [];
+    }
+  }
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  function getRowSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    if(!cutFile || !times || !pcs) return null;
+    return { cutFile, times, pcs, key: `${cutFile}|${times}|${pcs}` };
+  }
+
+  function findExtraBySignature(sig){
+    return EXTRA_STATUS_ROWS.find(r =>
+      r.rowKey === sig.key && r.status === 'กำลังทำ'
+    ) || null;
+  }
+
+  function getCurrentStatus(tr){
+    const sel = tr.querySelector('select');
+    return sel ? sel.value : '';
+  }
+
+  function applyRow(tr){
+    const sig = getRowSignature(tr);
+    const input = tr.querySelector('input.extra-info');
+    if(!sig || !input) return;
+
+    const currentStatus = getCurrentStatus(tr);
+    if(currentStatus !== 'กำลังทำ'){
+      input.value = '';
+      return;
+    }
+
+    const hit = findExtraBySignature(sig);
+    input.value = hit ? (hit.cutMachine || '') : '';
+  }
+
+  function applyAll(){
+    document.querySelectorAll('#extraTable tbody tr').forEach(tr => applyRow(tr));
+  }
+
+  // Run after table render (simple polling once)
+  let tries = 0;
+  const iv = setInterval(()=>{
+    const tbl = document.getElementById('extraTable');
+    if(tbl){
+      clearInterval(iv);
+      const sheetName = guessSheetName();
+      if(sheetName) loadStatus(sheetName);
+
+      // listen status change per row
+      tbl.addEventListener('change', (e)=>{
+        if(e.target && e.target.tagName === 'SELECT'){
+          const tr = e.target.closest('tr');
+          if(tr) applyRow(tr);
+        }
+      });
+    }
+    if(++tries > 20) clearInterval(iv);
+  }, 200);
+
+})();
+</script>
+
+
+<!-- === PATCH v6: Row-isolated CutMachine fill (no cross-row bleed) === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V6__) return;
+  window.__CUTMACHINE_PATCH_V6__ = true;
+
+  let EXTRA_STATUS_ROWS = [];
+
+  async function loadStatus(sheetName){
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map || {}).map(([k,v])=>({rowKey:k, ...v}));
+      initialFill();
+    }catch(e){
+      console.warn('[CutMachine v6] loadStatus failed', e);
+      EXTRA_STATUS_ROWS = [];
+    }
+  }
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  function getSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    if(!cutFile || !times || !pcs) return null;
+    return `${cutFile}|${times}|${pcs}`;
+  }
+
+  function findExtra(sig){
+    return EXTRA_STATUS_ROWS.find(r => r.rowKey === sig && r.status === 'กำลังทำ') || null;
+  }
+
+  function getStatus(tr){
+    const sel = tr.querySelector('select');
+    return sel ? sel.value : '';
+  }
+
+  function applyRowOnly(tr){
+    const input = tr.querySelector('input.extra-info');
+    if(!input) return;
+
+    const status = getStatus(tr);
+    if(status !== 'กำลังทำ'){
+      input.value = '';
+      return;
+    }
+
+    const sig = getSignature(tr);
+    if(!sig) { input.value = ''; return; }
+
+    const hit = findExtra(sig);
+    input.value = hit ? (hit.cutMachine || '') : '';
+  }
+
+  function initialFill(){
+    document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+      if(getStatus(tr) === 'กำลังทำ'){
+        applyRowOnly(tr);
+      }
+    });
+  }
+
+  // Init after table ready
+  let tries = 0;
+  const iv = setInterval(()=>{
+    const tbl = document.getElementById('extraTable');
+    if(tbl){
+      clearInterval(iv);
+      const sheetName = guessSheetName();
+      if(sheetName) loadStatus(sheetName);
+
+      // Row-isolated change handler
+      tbl.addEventListener('change', (e)=>{
+        if(e.target && e.target.tagName === 'SELECT'){
+          const tr = e.target.closest('tr');
+          if(tr) applyRowOnly(tr);
+        }
+      });
+    }
+    if(++tries > 20) clearInterval(iv);
+  }, 200);
+})();
+</script>
+
+
+<!-- === PATCH v7: Single-init + debounce to stop double render flicker === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V7__) return;
+  window.__CUTMACHINE_PATCH_V7__ = true;
+
+  let initialized = false;
+  let loading = false;
+  let EXTRA_STATUS_ROWS = [];
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  async function loadOnce(){
+    if(loading || initialized) return;
+    loading = true;
+    const sheetName = guessSheetName();
+    if(!sheetName){ loading = false; return; }
+
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map || {}).map(([k,v])=>({rowKey:k, ...v}));
+      initialFill();
+      initialized = true;
+    }catch(e){
+      console.warn('[CutMachine v7] load failed', e);
+    }finally{
+      loading = false;
+    }
+  }
+
+  function getSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    return cutFile && times && pcs ? `${cutFile}|${times}|${pcs}` : null;
+  }
+
+  function getStatus(tr){
+    const sel = tr.querySelector('select');
+    return sel ? sel.value : '';
+  }
+
+  function findExtra(sig){
+    return EXTRA_STATUS_ROWS.find(r=>r.rowKey===sig && r.status==='กำลังทำ') || null;
+  }
+
+  function applyRow(tr){
+    const input = tr.querySelector('input.extra-info');
+    if(!input) return;
+    if(getStatus(tr) !== 'กำลังทำ'){ input.value=''; return; }
+    const sig = getSignature(tr);
+    if(!sig){ input.value=''; return; }
+    const hit = findExtra(sig);
+    input.value = hit ? (hit.cutMachine||'') : '';
+  }
+
+  function initialFill(){
+    document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+      if(getStatus(tr)==='กำลังทำ') applyRow(tr);
+    });
+  }
+
+  function init(){
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return false;
+
+    loadOnce();
+
+    tbl.addEventListener('change', (e)=>{
+      if(e.target && e.target.tagName==='SELECT'){
+        const tr = e.target.closest('tr');
+        if(tr) applyRow(tr);
+      }
+    });
+    return true;
+  }
+
+  let tries=0;
+  const iv=setInterval(()=>{
+    if(init() || ++tries>20) clearInterval(iv);
+  },200);
+})();
+</script>
+
+
+<!-- === PATCH v8 FINAL: Shared CutMachine per row (Production Board) === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V8_SHARED__) return;
+  window.__CUTMACHINE_PATCH_V8_SHARED__ = true;
+
+  let EXTRA_STATUS_ROWS = [];
+  let initialized = false;
+  let loading = false;
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  async function loadOnce(){
+    if(loading || initialized) return;
+    loading = true;
+    const sheetName = guessSheetName();
+    if(!sheetName){ loading=false; return; }
+
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`);
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map||{}).map(([k,v])=>({rowKey:k,...v}));
+      initialFill();
+      initialized = true;
+    }catch(e){
+      console.warn('[CutMachine FINAL] load failed', e);
+    }finally{
+      loading = false;
+    }
+  }
+
+  function getSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    return cutFile && times && pcs ? `${cutFile}|${times}|${pcs}` : null;
+  }
+
+  function getStatus(tr){
+    const sel = tr.querySelector('select');
+    return sel ? sel.value : '';
+  }
+
+  function findExtra(sig){
+    return EXTRA_STATUS_ROWS.find(r=>r.rowKey===sig && r.status==='กำลังทำ')||null;
+  }
+
+  function applyRow(tr){
+    const input = tr.querySelector('input.extra-info');
+    if(!input) return;
+
+    if(getStatus(tr)!=='กำลังทำ'){
+      input.value='';
+      return;
+    }
+
+    const sig = getSignature(tr);
+    if(!sig){ input.value=''; return; }
+
+    const hit = findExtra(sig);
+    input.value = hit ? (hit.cutMachine||'') : '';
+  }
+
+  function initialFill(){
+    document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+      if(getStatus(tr)==='กำลังทำ') applyRow(tr);
+    });
+  }
+
+  function init(){
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return false;
+
+    loadOnce();
+
+    tbl.addEventListener('change', (e)=>{
+      if(e.target && e.target.tagName==='SELECT'){
+        const tr = e.target.closest('tr');
+        if(tr) applyRow(tr);
+      }
+    });
+    return true;
+  }
+
+  let tries=0;
+  const iv=setInterval(()=>{
+    if(init() || ++tries>20) clearInterval(iv);
+  },200);
+})();
+</script>
+
+
+<!-- === PATCH v9: Silent refresh every 5 seconds (no flicker) === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V9__) return;
+  window.__CUTMACHINE_PATCH_V9__ = true;
+
+  let EXTRA_STATUS_ROWS = [];
+  let refreshing = false;
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  async function fetchStatus(){
+    if(refreshing) return;
+    refreshing = true;
+    const sheetName = guessSheetName();
+    if(!sheetName){ refreshing=false; return; }
+
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`, {
+        cache: 'no-store'
+      });
+      const js = await res.json();
+      EXTRA_STATUS_ROWS = Object.entries(js.map||{}).map(([k,v])=>({rowKey:k,...v}));
+      silentApply();
+    }catch(e){
+      console.warn('[CutMachine v9] refresh failed', e);
+    }finally{
+      refreshing = false;
+    }
+  }
+
+  function getSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    return cutFile && times && pcs ? `${cutFile}|${times}|${pcs}` : null;
+  }
+
+  function getStatus(tr){
+    const sel = tr.querySelector('select');
+    return sel ? sel.value : '';
+  }
+
+  function findExtra(sig){
+    return EXTRA_STATUS_ROWS.find(r=>r.rowKey===sig && r.status==='กำลังทำ')||null;
+  }
+
+  function silentApply(){
+    document.querySelectorAll('#extraTable tbody tr').forEach(tr=>{
+      const input = tr.querySelector('input.extra-info');
+      if(!input) return;
+
+      if(getStatus(tr)!=='กำลังทำ') return;
+
+      const sig = getSignature(tr);
+      if(!sig) return;
+
+      const hit = findExtra(sig);
+      if(hit && input.value !== hit.cutMachine){
+        input.value = hit.cutMachine || '';
+      }
+    });
+  }
+
+  // Start silent refresh loop
+  setInterval(fetchStatus, 5000);
+})();
+</script>
+
+
+<!-- === PATCH v10: STATUS LOCK (prevent concurrent 'กำลังทำ') === -->
+<script>
+(function(){
+  if(window.__CUTMACHINE_PATCH_V10__) return;
+  window.__CUTMACHINE_PATCH_V10__ = true;
+
+  let LOCK_MAP = {};
+
+  function guessSheetName(){
+    const d = document.getElementById('date')?.value;
+    const l = document.getElementById('line')?.value;
+    if(!d) return '';
+    return l ? `Prod_${d}_Line${l}` : `Prod_${d}_All`;
+  }
+
+  async function refreshLock(){
+    const sheetName = guessSheetName();
+    if(!sheetName) return;
+    try{
+      const res = await fetch(`${GSCRIPT_URL}?action=loadStatus&sheetName=${encodeURIComponent(sheetName)}`, {cache:'no-store'});
+      const js = await res.json();
+      LOCK_MAP = js.map || {};
+    }catch(e){
+      console.warn('[LOCK] refresh failed', e);
+    }
+  }
+
+  function getSignature(tr){
+    const tds = tr.querySelectorAll('td');
+    if(tds.length < 4) return null;
+    const cutFile = tds[0]?.innerText.trim();
+    const times   = tds[2]?.innerText.trim();
+    const pcs     = tds[3]?.innerText.trim();
+    return cutFile && times && pcs ? `${cutFile}|${times}|${pcs}` : null;
+  }
+
+  function isLocked(sig){
+    const r = LOCK_MAP[sig];
+    return r && r.status === 'กำลังทำ';
+  }
+
+  function getCurrentMachine(){
+    const inp = document.querySelector('input.extra-info');
+    return inp ? inp.value : '';
+  }
+
+  function initLock(){
+    const tbl = document.getElementById('extraTable');
+    if(!tbl) return false;
+
+    refreshLock();
+    setInterval(refreshLock, 5000);
+
+    tbl.addEventListener('change', (e)=>{
+      if(e.target && e.target.tagName==='SELECT'){
+        const tr = e.target.closest('tr');
+        const sig = getSignature(tr);
+        if(!sig) return;
+
+        if(e.target.value === 'กำลังทำ'){
+          if(isLocked(sig)){
+            alert('⚠ งานนี้กำลังถูกดำเนินการอยู่แล้ว ไม่สามารถตั้งเป็น "กำลังทำ" ซ้ำได้');
+            e.target.value = '';
+          }
+        }
+      }
+    });
+    return true;
+  }
+
+  let tries=0;
+  const iv=setInterval(()=>{
+    if(initLock() || ++tries>20) clearInterval(iv);
+  },200);
 })();
 </script>
 
